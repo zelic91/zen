@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	GenDocker        = "Generate Dockerfile for Go"
-	GenDockerSwagger = "Generate Dockerfile for Go with Swagger"
+	GenDocker        = "🐳 Generate Dockerfile for Go"
+	GenDockerSwagger = "🐳 Generate Dockerfile for Go with Swagger"
 	GenGithubActions = "Generate Github Actions Config for Go"
 	GenMakefile      = "Generate Makefile for Go"
 
