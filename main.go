@@ -13,11 +13,13 @@ import (
 )
 
 const (
-	GenDocker        = "GenDocker"
-	GenGithubActions = "GenGithubActions"
-	GenMakefile      = "GenMakefile"
+	GenDocker        = "Generate Dockerfile for Go"
+	GenDockerSwagger = "Generate Dockerfile for Go with Swagger"
+	GenGithubActions = "Generate Github Actions Config for Go"
+	GenMakefile      = "Generate Makefile for Go"
 
 	TemplateDocker        = "docker-go.tmpl"
+	TemplateDockerSwagger = "docker-go-swagger.tmpl"
 	TemplateGithubActions = "github-action-go.tmpl"
 	TemplateMakefile      = "make-go.tmpl"
 )
@@ -36,12 +38,14 @@ var (
 func init() {
 	mapping = map[string]string{
 		TemplateDocker:        "Dockerfile",
+		TemplateDockerSwagger: "Dockerfile",
 		TemplateGithubActions: "./.github/workflows/main.yaml",
 		TemplateMakefile:      "Makefile",
 	}
 
 	choices = []string{
 		GenDocker,
+		GenDockerSwagger,
 		GenGithubActions,
 		GenMakefile,
 	}
@@ -56,7 +60,7 @@ func init() {
 func main() {
 
 	prompt := promptui.Select{
-		Label: "Select generating option:",
+		Label: "Select generating option",
 		Items: choices,
 	}
 
@@ -68,17 +72,19 @@ func main() {
 
 	switch result {
 	case GenDocker:
-		ExeGenDocker()
+		ExecGenDocker()
+	case GenDockerSwagger:
+		ExecGenDockerSwagger()
 	case GenMakefile:
-		ExeGenMakefile()
+		ExecGenMakefile()
 	case GenGithubActions:
-		ExeGenGithubActions()
+		ExecGenGithubActions()
 	default:
 		fmt.Println("Not implemented.")
 	}
 }
 
-func ExeGenDocker() {
+func ExecGenDocker() {
 	path, err := os.Getwd()
 	if err != nil {
 		panic(err)
@@ -94,21 +100,29 @@ func ExeGenDocker() {
 		Folder: folder,
 	}
 
-	var filePath *os.File
-	out := mapping[TemplateDocker]
-
-	if filePath, err = os.Create(out); err != nil {
-		log.Fatal(err)
-	}
-
-	defer filePath.Close()
-
-	if err = templates.ExecuteTemplate(filePath, TemplateDocker, appVars); err != nil {
-		log.Fatal(err)
-	}
+	ExecGeneral(TemplateDocker, appVars)
 }
 
-func ExeGenGithubActions() {
+func ExecGenDockerSwagger() {
+	path, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+
+	elements := strings.Split(path, "/")
+	folder := elements[len(elements)-1]
+	log.Println(folder)
+
+	appVars := struct {
+		Folder string
+	}{
+		Folder: folder,
+	}
+
+	ExecGeneral(TemplateDockerSwagger, appVars)
+}
+
+func ExecGenGithubActions() {
 	prompt := promptui.Prompt{
 		Label: "Docker Repository",
 	}
@@ -126,11 +140,19 @@ func ExeGenGithubActions() {
 		DockerRepo: result,
 	}
 
+	ExecGeneral(TemplateGithubActions, appVars)
+}
+
+func ExecGenMakefile() {
+	ExecGeneral(TemplateMakefile, nil)
+}
+
+func ExecGeneral(templateType string, vars interface{}) {
 	var filePath *os.File
-	out := mapping[TemplateGithubActions]
+	out := mapping[templateType]
 
 	dirName := filepath.Dir(out)
-	err = os.MkdirAll(dirName, os.ModePerm)
+	err := os.MkdirAll(dirName, os.ModePerm)
 	if err != nil {
 		fmt.Printf("error creating parent dirs %v", err)
 		return
@@ -144,23 +166,7 @@ func ExeGenGithubActions() {
 
 	defer filePath.Close()
 
-	if err := templates.ExecuteTemplate(filePath, TemplateGithubActions, appVars); err != nil {
-		log.Fatal(err)
-	}
-}
-
-func ExeGenMakefile() {
-	var filePath *os.File
-	out := mapping[TemplateMakefile]
-
-	filePath, err := os.Create(out)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer filePath.Close()
-
-	if err := templates.ExecuteTemplate(filePath, TemplateMakefile, nil); err != nil {
+	if err := templates.ExecuteTemplate(filePath, templateType, vars); err != nil {
 		log.Fatal(err)
 	}
 }

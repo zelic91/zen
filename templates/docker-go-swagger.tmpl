@@ -12,6 +12,6 @@ RUN go install -v ./...
 #==============
 FROM scratch
 
-COPY --from=builder /go/bin/zen /zen
+COPY --from=builder /go/bin/{{.Folder}} /{{.Folder}}
 
-CMD ["/zen"]
+CMD ["/{{.Folder}}"]
