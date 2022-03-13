@@ -10,18 +10,21 @@ import (
 	"strings"
 
 	"github.com/manifoldco/promptui"
+	"github.com/zelic91/zen/rand"
 )
 
 const (
 	GenDocker        = "🐳 Generate Dockerfile for Go"
 	GenDockerSwagger = "🐳 Generate Dockerfile for Go with Swagger"
-	GenK8sDeployment = "☸️ Generate k8s deployment"
-	GenK8sService    = "☸️ Generate k8s service"
+	GenDockerCompose = "🐳 Generate docker-compose.yaml for typical apps"
+	GenK8sDeployment = "☸️  Generate k8s deployment"
+	GenK8sService    = "☸️  Generate k8s service"
 	GenGithubActions = "Generate Github Actions Config for Go"
 	GenMakefile      = "Generate Makefile for Go"
 
 	TemplateDocker        = "docker-go.tmpl"
 	TemplateDockerSwagger = "docker-go-swagger.tmpl"
+	TemplateDockerCompose = "docker-compose.tmpl"
 	TemplateK8sDeployment = "k8s-deployment.tmpl"
 	TemplateK8sService    = "k8s-service.tmpl"
 	TemplateGithubActions = "github-action-go.tmpl"
@@ -43,6 +46,7 @@ func init() {
 	mapping = map[string]string{
 		TemplateDocker:        "Dockerfile",
 		TemplateDockerSwagger: "Dockerfile",
+		TemplateDockerCompose: "docker-compose.yaml",
 		TemplateK8sDeployment: "deployment.yaml",
 		TemplateK8sService:    "service.yaml",
 		TemplateGithubActions: "./.github/workflows/main.yaml",
@@ -52,6 +56,7 @@ func init() {
 	choices = []string{
 		GenDocker,
 		GenDockerSwagger,
+		GenDockerCompose,
 		GenK8sDeployment,
 		GenK8sService,
 		GenGithubActions,
@@ -83,6 +88,8 @@ func main() {
 		ExecGenDocker()
 	case GenDockerSwagger:
 		ExecGenDockerSwagger()
+	case GenDockerCompose:
+		ExecGenDockerCompose()
 	case GenK8sDeployment:
 		ExecGenK8sDeployment()
 	case GenK8sService:
@@ -132,6 +139,32 @@ func ExecGenDockerSwagger() {
 	}
 
 	ExecGeneral(TemplateDockerSwagger, appVars)
+}
+
+func ExecGenDockerCompose() {
+	prompt := promptui.Prompt{
+		Label: "Docker Image for your backend",
+	}
+
+	result, err := prompt.Run()
+
+	if err != nil {
+		fmt.Printf("error reading Docker image %v", err)
+		return
+	}
+
+	appVars := struct {
+		Image            string
+		PostgresUser     string
+		PostgresDB       string
+		PostgresPassword string
+	}{
+		Image:            result,
+		PostgresUser:     rand.RandomAlphabet(32),
+		PostgresDB:       rand.RandomAlphabet(32),
+		PostgresPassword: rand.RandomAlphaNumeric(64),
+	}
+	ExecGeneral(TemplateDockerCompose, appVars)
 }
 
 func ExecGenGithubActions() {

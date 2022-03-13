@@ -1,0 +1,49 @@
+version: "2.1"
+services: 
+  db:
+    restart: always
+    image: postgres:13.1-alpine
+    environment:
+      - POSTGRES_USER={{ .PostgresUser }}
+      - POSTGRES_DB={{ .PostgresDB }}
+      - POSTGRES_PASSWORD={{ .PostgresPassword }}
+    volumes: 
+      - ./db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U {{ .PostgresUser }} -d {{ .PostgresDB }}"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+  
+  redis:
+    restart: always
+    image: redis:6.0.10-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    restart: always
+    image: {{ .Image }}:latest
+    ports:
+      - "3000:3000"
+    environment: 
+      - DB_HOST=db
+      - DB_NAME={{ .PostgresDB }}
+      - DB_USER={{ .PostgresUser }}
+      - DB_PASSWORD={{ .PostgresPassword }}
+      - REDIS_HOST=redis:6379 
+      - REDIS_DB=1
+    depends_on: 
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    links: 
+      - db
