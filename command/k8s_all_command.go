@@ -16,11 +16,11 @@ func NewK8sAllCommand() *BaseCommand {
 		Mappings: []TemplateMapping{
 			{
 				Template:   "k8s-deployment.tmpl",
-				OutputFile: "deployment.yaml",
+				OutputFile: "deployment/deployment.yaml",
 			},
 			{
 				Template:   "k8s-service.tmpl",
-				OutputFile: "service.yaml",
+				OutputFile: "deployment/service.yaml",
 			},
 		},
 		ReadArgsFunc: func(b *BaseCommand) {

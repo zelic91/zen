@@ -9,12 +9,13 @@ import (
 )
 
 const (
-	GenDocker        = "🐳 Generate Dockerfile for Go"
-	GenDockerSwagger = "🐳 Generate Dockerfile for Go with Swagger"
-	GenDockerCompose = "🐳 Generate docker-compose.yaml for typical apps"
-	GenK8sAll        = "☸️  Generate k8s deployment & service"
-	GenGithubActions = "Generate Github Actions Config for Go"
-	GenMakefile      = "Generate Makefile for Go"
+	GenDocker                  = "🐳 Generate Dockerfile for Go"
+	GenDockerSwagger           = "🐳 Generate Dockerfile for Go with Swagger"
+	GenDockerCompose           = "🐳 Generate docker-compose.yaml for typical apps"
+	GenK8sAll                  = "👙 Generate k8s deployment & service"
+	GenGithubActions           = "😍 Generate Github Actions Config for Go"
+	GenGithubActionsAutoDeploy = "😍 Generate Github Actions and Auto-deploy (docker-compose) for Go"
+	GenMakefile                = "👋 Generate Makefile for Go"
 )
 
 type CommandInterface interface {

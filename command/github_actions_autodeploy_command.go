@@ -6,12 +6,12 @@ import (
 	"github.com/manifoldco/promptui"
 )
 
-func NewGithubActionsCommand() *BaseCommand {
+func NewGithubActionsAutoDeployCommand() *BaseCommand {
 	return &BaseCommand{
-		Command: GenGithubActions,
+		Command: GenGithubActionsAutoDeploy,
 		Mappings: []TemplateMapping{
 			{
-				Template:   "github-action-go.tmpl",
+				Template:   "github-action-go-deploy.tmpl",
 				OutputFile: "./.github/workflows/main.yaml",
 			},
 		},
@@ -20,17 +20,30 @@ func NewGithubActionsCommand() *BaseCommand {
 				Label: "Docker Repository",
 			}
 
-			result, err := prompt.Run()
+			repo, err := prompt.Run()
 
 			if err != nil {
 				fmt.Printf("error reading Docker repository %v", err)
 				return
 			}
 
+			prompt = promptui.Prompt{
+				Label: "Target Remote Folder",
+			}
+
+			folder, err := prompt.Run()
+
+			if err != nil {
+				fmt.Printf("error reading Target Remote Folder %v", err)
+				return
+			}
+
 			b.Args = struct {
 				DockerRepo string
+				Folder     string
 			}{
-				DockerRepo: result,
+				DockerRepo: repo,
+				Folder:     folder,
 			}
 		},
 	}

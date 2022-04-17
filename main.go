@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	//go:embed templates/*.tmpl
+	//go:embed templates/**/*.tmpl
 	rootFs embed.FS
 
 	commands []command.CommandInterface
@@ -27,6 +27,7 @@ func init() {
 		command.GenDockerCompose,
 		command.GenK8sAll,
 		command.GenGithubActions,
+		command.GenGithubActionsAutoDeploy,
 		command.GenMakefile,
 	}
 
@@ -35,12 +36,13 @@ func init() {
 		command.NewDockerGoSwaggerCommand(),
 		command.NewDockerComposeCommand(),
 		command.NewGithubActionsCommand(),
+		command.NewGithubActionsAutoDeployCommand(),
 		command.NewK8sAllCommand(),
 		command.NewMakefileCommand(),
 	}
 
 	var err error
-	templates, err = template.ParseFS(rootFs, "templates/*.tmpl")
+	templates, err = template.ParseFS(rootFs, "templates/**/*.tmpl")
 	if err != nil {
 		fmt.Printf("Error parsing templates: %v\n", err)
 	}
