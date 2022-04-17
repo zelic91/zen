@@ -38,6 +38,7 @@ services:
       - DB_NAME={{ .PostgresDB }}
       - DB_USER={{ .PostgresUser }}
       - DB_PASSWORD={{ .PostgresPassword }}
+      - DATABASE_URL=postgres://db:5432/{{ .PostgresDB }}?sslmode=disable&user={{ .PostgresUser }}&password={{ .PostgresPassword }}
       - REDIS_HOST=redis:6379 
       - REDIS_DB=1
     depends_on: 
