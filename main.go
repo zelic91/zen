@@ -29,6 +29,7 @@ func init() {
 		command.GenGithubActions,
 		command.GenGithubActionsAutoDeploy,
 		command.GenMakefile,
+		command.GenAppStoreFastlane,
 	}
 
 	commands = []command.CommandInterface{
@@ -39,6 +40,7 @@ func init() {
 		command.NewGithubActionsAutoDeployCommand(),
 		command.NewK8sAllCommand(),
 		command.NewMakefileCommand(),
+		command.NewAppStoreDescriptionCommand(),
 	}
 
 	var err error

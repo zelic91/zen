@@ -16,6 +16,8 @@ const (
 	GenGithubActions           = "😍 Generate Github Actions Config for Go"
 	GenGithubActionsAutoDeploy = "😍 Generate Github Actions and Auto-deploy (docker-compose) for Go"
 	GenMakefile                = "👋 Generate Makefile for Go"
+	GenAppStoreFastlane        = "✅ App Store Fastlane"
+	GenPlayStoreFastlane       = "✅ Play Store Fastlane"
 )
 
 type CommandInterface interface {
