@@ -34,6 +34,8 @@ var goserviceCmd = &cobra.Command{
 	Run:   GoServiceCmdExec,
 }
 
+const templatePath = "templates/goservice"
+
 func init() {
 	createCmd.AddCommand(goserviceCmd)
 	goserviceCmd.Flags().StringVarP(&moduleName, "module", "m", "github.com/zelic91/app", "Module name of the service")
@@ -70,7 +72,7 @@ func GoServiceCmdExec(cmd *cobra.Command, args []string) {
 		}
 
 		dirName := stack.Pop().(string)
-		dirs, err := RootFs.ReadDir(fmt.Sprintf("templates/goservice%s", dirName))
+		dirs, err := RootFs.ReadDir(fmt.Sprintf("%s%s", templatePath, dirName))
 		if err != nil {
 			fmt.Printf("Error parsing templates: %v\n", err)
 		}
@@ -81,7 +83,7 @@ func GoServiceCmdExec(cmd *cobra.Command, args []string) {
 				stack.Push(newDirName)
 			} else {
 				templateMap[dir.Name()] = newDirName
-				fileList = append(fileList, fmt.Sprintf("templates/goservice%s", newDirName))
+				fileList = append(fileList, fmt.Sprintf("%s%s", templatePath, newDirName))
 			}
 		}
 	}
