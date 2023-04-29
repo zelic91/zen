@@ -15,10 +15,15 @@ import (
 	"github.com/zelic91/zen/common"
 )
 
+type goServiceData struct {
+	Module string
+}
+
 var (
-	packageName string
-	directory   string
-	templates   *template.Template
+	moduleName string
+	directory  string
+	templates  *template.Template
+	data       goServiceData
 )
 
 // goserviceCmd represents the goservice command
@@ -31,11 +36,27 @@ var goserviceCmd = &cobra.Command{
 
 func init() {
 	createCmd.AddCommand(goserviceCmd)
-	goserviceCmd.Flags().StringVarP(&packageName, "package", "p", "github.com/zelic91/app", "Package for the service")
+	goserviceCmd.Flags().StringVarP(&moduleName, "module", "m", "github.com/zelic91/app", "Module name of the service")
 	goserviceCmd.Flags().StringVarP(&directory, "directory", "d", ".", "Target directory")
+
+	// initConfig()
 }
 
+// func initConfig() {
+// 	viper.SetConfigName("config")
+// 	viper.SetConfigType("yaml")
+// 	viper.AddConfigPath(".")
+// 	err := viper.ReadInConfig()
+// 	if err != nil {
+// 		panic(fmt.Errorf("fatal error config file: %w", err))
+// 	}
+// }
+
 func GoServiceCmdExec(cmd *cobra.Command, args []string) {
+	data = goServiceData{
+		Module: moduleName,
+	}
+
 	var err error
 	templateMap := map[string]string{}
 	fileList := []string{}
@@ -56,11 +77,10 @@ func GoServiceCmdExec(cmd *cobra.Command, args []string) {
 
 		for _, dir := range dirs {
 			newDirName := fmt.Sprintf("%s/%s", dirName, dir.Name())
-			fmt.Println(newDirName)
 			if dir.IsDir() {
 				stack.Push(newDirName)
 			} else {
-				templateMap[dir.Name()] = fmt.Sprintf("templates/goservice%s", newDirName)
+				templateMap[dir.Name()] = newDirName
 				fileList = append(fileList, fmt.Sprintf("templates/goservice%s", newDirName))
 			}
 		}
@@ -75,7 +95,6 @@ func GoServiceCmdExec(cmd *cobra.Command, args []string) {
 	}
 
 	for _, tmpl := range templates.Templates() {
-		fmt.Println(tmpl.Name())
 		outFileName := fmt.Sprintf("%s/%s", directory, templateMap[tmpl.Name()])
 		outFileName = strings.TrimSuffix(outFileName, ".tmpl")
 
@@ -95,8 +114,10 @@ func GoServiceCmdExec(cmd *cobra.Command, args []string) {
 
 		defer filePath.Close()
 
-		if err := templates.ExecuteTemplate(filePath, tmpl.Name(), nil); err != nil {
+		if err := templates.ExecuteTemplate(filePath, tmpl.Name(), data); err != nil {
 			log.Fatal(err)
 		}
 	}
+
+	fmt.Println("DONE!")
 }

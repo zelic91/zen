@@ -1,0 +1,17 @@
+init:
+	go mod init {{.Module}}
+	go get -u github.com/spf13/cobra@latest
+	go get -u github.com/spf13/viper
+	go mod tidy
+
+
+toolsup:
+	docker-compose -f tools/docker-compose.yml up -d
+
+toolsdown:
+	docker-compose -f tools/docker-compose.yml down
+
+dev:
+	go run main.go serve
+
+.PHONY: init

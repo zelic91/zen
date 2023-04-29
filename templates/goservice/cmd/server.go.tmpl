@@ -1,0 +1,22 @@
+package cmd
+
+import (
+	"log"
+
+	"github.com/spf13/cobra"
+)
+
+var serverCmd = &cobra.Command{
+	Use:   "serve",
+	Short: "Start your server",
+	Long:  `Start your server`,
+	Run:   StartServer,
+}
+
+func init() {
+	rootCmd.AddCommand(serverCmd)
+}
+
+func StartServer(cmd *cobra.Command, args []string) {
+	log.Println("Server started")
+}
