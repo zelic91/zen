@@ -11,6 +11,9 @@ toolsup:
 toolsdown:
 	docker-compose -f tools/docker-compose.yml down
 
+dbgen:
+	sqlc generate
+
 dev:
 	go run main.go serve
 
