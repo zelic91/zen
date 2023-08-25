@@ -1,0 +1,52 @@
+init:
+	go mod init generic_backend
+	go get -u github.com/spf13/cobra@latest
+	go get -u github.com/spf13/viper
+	mv env.sample .env
+	mv gitignore .gitignore
+
+toolsup:
+	docker-compose -f tools/docker-compose.yaml up -d
+
+toolsdown:
+	docker-compose -f tools/docker-compose.yaml down
+
+prepdev:
+	brew install dbmate
+	go install github.com/kyleconroy/sqlc/cmd/sqlc@latest
+	go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@latest
+	go install marwan.io/impl/cmd/impl@latest
+
+migrate:
+	dbmate up
+
+impl:
+	impl -iface=generic_backend/api/gen.ServerInterface -impl=generic_backend/api.ServerImpl -w
+	impl -iface=generic_backend/api.OpsService -impl=generic_backend/ops.service -w
+	impl -iface=generic_backend/api.AuthService -impl=generic_backend/auth.service -w
+	impl -iface=generic_backend/api.DeviceService -impl=generic_backend/devices.service -w
+	impl -iface=generic_backend/api.UserService -impl=generic_backend/users.service -w
+	impl -iface=generic_backend/api.ObjectService -impl=generic_backend/objects.service -w
+	impl -iface=generic_backend/api.CategoryService -impl=generic_backend/categories.service -w
+
+apigen:
+	rm -rf api/gen
+	mkdir api/gen
+	oapi-codegen -package gen api/openapi.yaml > api/gen/spec.gen.go
+	$(MAKE) impl
+
+dbgen:
+	rm -rf db/dbgen
+	sqlc -f db/sqlc.config.yaml generate
+
+genall: migrate prepdev apigen dbgen
+	go mod tidy
+
+dev:
+	go run main.go serve
+
+docker:
+	docker image rm generic_backend & docker build -t generic_backend . && docker run --rm --env-file ./.env.docker -p 3000:3000 --name generic_backend generic_backend
+
+
+.PHONY: init dev prepdev apigen dbgen toolsup toolsdown

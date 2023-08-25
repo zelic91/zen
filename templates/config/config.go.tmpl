@@ -1,0 +1,7 @@
+package config
+
+type Config struct {
+	JWTKey      string `mapstructure:"JWT_KEY"`
+	Port        int    `mapstructure:"PORT"`
+	DatabaseURL string `mapstructure:"DATABASE_URL"`
+}
