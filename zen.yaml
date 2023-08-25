@@ -1,0 +1,34 @@
+commands:
+  - name: server
+    type: api
+  - name: websocket
+    type: websocket
+  - name: crawler
+    type: worker
+
+database:
+  - name: postgres
+    type: postgres
+    models:
+      - name: admin
+        properties:
+          - name: username
+            type: string
+          - name: password
+            type: string
+            secured: true
+
+  - name: mongo
+    type: mongo
+    schema:
+      - name: admin
+        properties:
+          - name: username
+            type: string
+          - name: password
+            type: string
+            secured: true
+
+services:
+  - name: admin
+    database: postgres

@@ -5,4 +5,7 @@ test:
 untest:
 	rm -rf testgen
 
-.PHONY: test untest
+create:
+	go run main.go create
+
+.PHONY: test untest create

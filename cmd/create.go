@@ -4,36 +4,45 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
+	"log"
+	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/zelic91/zen/config"
+	"gopkg.in/yaml.v3"
 )
 
 // createCmd represents the create command
 var createCmd = &cobra.Command{
 	Use:   "create",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Create a new service based on YAML config",
+	Long:  `Create a new service based on YAML config`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("create called")
+		configFile, _ := cmd.Flags().GetString("config")
+		to, _ := cmd.Flags().GetString("to")
+
+		create(configFile, to)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(createCmd)
+	createCmd.Flags().StringP("config", "c", "zen.yaml", "YAML config for zen")
+	createCmd.Flags().StringP("to", "t", "testgen", "Destination for generated files")
+}
 
-	// Here you will define your flags and configuration settings.
+func create(configFile string, to string) {
+	yamlFile, err := os.ReadFile(configFile)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// createCmd.PersistentFlags().String("foo", "", "A help for foo")
+	var config config.Config
+	err = yaml.Unmarshal(yamlFile, &config)
 
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// createCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Printf("%#v\n", config)
 }
