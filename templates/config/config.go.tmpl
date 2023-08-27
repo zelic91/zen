@@ -1,7 +1,9 @@
 package config
 
 type Config struct {
-	JWTKey      string `mapstructure:"JWT_KEY"`
-	Port        int    `mapstructure:"PORT"`
-	DatabaseURL string `mapstructure:"DATABASE_URL"`
+{{- with .Env }}
+	{{- range . }}
+	{{ if .StructName }}{{ .StructName }}{{ else }}{{ .Name | lower | camelcase }}{{ end }} {{ .Type }} `mapstructure:"{{ .Name }}"`
+	{{- end }}
+{{- end }}
 }

@@ -6,6 +6,16 @@ commands:
   - name: crawler
     type: worker
 
+moduleName: test-zen
+env:
+  - name: JWT_KEY
+    structName: JWTKey
+    type: string
+  - name: PORT
+    type: int
+  - name: DATABASE_URL
+    structName: DatabaseURL
+    type: string
 database:
   - name: postgres
     type: postgres

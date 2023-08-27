@@ -4,21 +4,29 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"bytes"
 	"fmt"
+	"go/format"
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 
+	"github.com/Masterminds/sprig"
 	"github.com/spf13/cobra"
 	"github.com/zelic91/zen/common"
 	"github.com/zelic91/zen/config"
 	"gopkg.in/yaml.v3"
 )
 
+// Root template path points to the directory which hosts
+// every templates.
+// The templates will be organized into subfolders
+// by their functionalities. For example:
+// - root: all necessary files for the project roots: Makefile, sample env, etc.
 const rootTemplatePath = "templates"
 
-// createCmd represents the create command
 var createCmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create a new service based on YAML config",
@@ -38,7 +46,7 @@ func init() {
 }
 
 func create(configFile string, outputDir string) {
-	// config := readConfig(configFile)
+	config := readConfig(configFile)
 
 	// Make the target path
 	if err := makeTargetPath(outputDir); err != nil {
@@ -46,9 +54,10 @@ func create(configFile string, outputDir string) {
 	}
 
 	// Generate root files
-	generateGeneric(outputDir, fmt.Sprintf("%s/%s", rootTemplatePath, "root"), "")
+	generateRootFiles(outputDir, config)
 
 	// Generate config
+	generateConfig(outputDir, config)
 
 	// Generate commands
 
@@ -82,8 +91,51 @@ func readConfig(configFile string) *config.Config {
 	return &config
 }
 
-func generateGeneric(outputPath string, inputPath string, overridePath string) {
-	var err error
+// Generate the root files such as Makefile or sample env
+func generateRootFiles(
+	outputPath string,
+	config *config.Config,
+) {
+	generateGeneric(
+		outputPath,
+		fmt.Sprintf("%s/%s", rootTemplatePath, "root"),
+		config,
+	)
+}
+
+func generateConfig(
+	outputPath string,
+	config *config.Config,
+) {
+	generateGeneric(
+		fmt.Sprintf("%s/%s", outputPath, "config"),
+		fmt.Sprintf("%s/%s", rootTemplatePath, "config"),
+		config,
+	)
+}
+
+// func generateDatabases(
+// 	outputPath string,
+// 	config *config.Config,
+// ) {
+// 	for _, db := range config.Databases {
+// 		generateGeneric(
+// 			outputPath+"db",
+// 			fmt.Sprintf("%s/%s/db.sql", rootTemplatePath, "db"),
+// 			config,
+// 		)
+// 	}
+// }
+
+// This method should be general enough to be reused
+// - outputPath: the target path that host the generated files
+// - inputPath: the original path of the templates
+// - config: the config to be used as the data for rendering templates
+func generateGeneric(
+	outputPath string,
+	inputPath string,
+	config *config.Config,
+) {
 	templateMap := map[string]string{}
 	fileList := []string{}
 	stack := common.NewStack()
@@ -112,16 +164,14 @@ func generateGeneric(outputPath string, inputPath string, overridePath string) {
 		}
 	}
 
-	templates, err = template.ParseFS(
+	templates = template.Must(template.New("zen-template").Funcs(sprig.FuncMap()).ParseFS(
 		RootFs,
 		fileList...,
-	)
-	if err != nil {
-		fmt.Printf("Error parsing templates: %v\n", err)
-	}
+	))
 
 	for _, tmpl := range templates.Templates() {
-		outFileName := fmt.Sprintf("%s/%s", outputPath, templateMap[tmpl.Name()])
+		strippedOutFileName := strings.TrimSuffix(templateMap[tmpl.Name()], ".tmpl")
+		outFileName := fmt.Sprintf("%s/%s", outputPath, strippedOutFileName)
 
 		var filePath *os.File
 		dirName := filepath.Dir(outFileName)
@@ -139,8 +189,23 @@ func generateGeneric(outputPath string, inputPath string, overridePath string) {
 
 		defer filePath.Close()
 
-		if err := templates.ExecuteTemplate(filePath, tmpl.Name(), data); err != nil {
+		tmpl = tmpl.Funcs(sprig.FuncMap())
+
+		var rendered bytes.Buffer
+		if err := templates.ExecuteTemplate(&rendered, tmpl.Name(), config); err != nil {
 			log.Fatal(err)
 		}
+
+		if !strings.Contains(tmpl.Name(), ".go") {
+			filePath.Write(rendered.Bytes())
+			return
+		}
+
+		formatted, err := format.Source(rendered.Bytes())
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		filePath.Write(formatted)
 	}
 }

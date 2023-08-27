@@ -1,5 +1,5 @@
 init:
-	go mod init generic_backend
+	go mod init {{ .ModuleName }}
 	go get -u github.com/spf13/cobra@latest
 	go get -u github.com/spf13/viper
 	mv env.sample .env
@@ -46,7 +46,12 @@ dev:
 	go run main.go serve
 
 docker:
-	docker image rm generic_backend & docker build -t generic_backend . && docker run --rm --env-file ./.env.docker -p 3000:3000 --name generic_backend generic_backend
+	docker image rm {{ .ModuleName }} & \
+	docker build -t {{ .ModuleName }} . && \
+	docker run --rm \
+		--env-file ./.env.docker \
+		-p 3000:3000 \
+		--name {{ .ModuleName }} {{ .ModuleName }}
 
 
 .PHONY: init dev prepdev apigen dbgen toolsup toolsdown

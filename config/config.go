@@ -1,9 +1,11 @@
 package config
 
 type Config struct {
-	Commands  []Command
-	Databases []Database
-	Services  []Service
+	ModuleName string `yaml:"moduleName"`
+	Commands   []Command
+	Databases  []Database
+	Services   []Service
+	Env        []Env
 }
 
 type Command struct {
@@ -30,4 +32,10 @@ type ModelProperties struct {
 type Service struct {
 	Name     string
 	Database string
+}
+
+type Env struct {
+	Name       string
+	StructName string `yaml:"structName"`
+	Type       string
 }
