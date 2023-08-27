@@ -1,0 +1,113 @@
+-- migrate:up
+CREATE TABLE admins (
+    id BIGSERIAL PRIMARY KEY,
+    first_name TEXT,
+    last_name TEXT,
+    username TEXT NOT NULL,
+    email TEXT,
+    password_hashed TEXT,
+    password_salt TEXT,
+    status TEXT,
+    created_by BIGSERIAL,
+    updated_by BIGSERIAL,
+    deleted_by BIGSERIAL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
+    deleted_at TIMESTAMP,
+    CONSTRAINT fk_created_by_admin
+        FOREIGN KEY(created_by)
+            REFERENCES admins(id)
+            ON DELETE CASCADE,
+    CONSTRAINT fk_updated_by_admin
+        FOREIGN KEY(updated_by)
+            REFERENCES admins(id)
+            ON DELETE CASCADE,
+    CONSTRAINT fk_deleted_by_admin
+        FOREIGN KEY(deleted_by)
+            REFERENCES admins(id)
+            ON DELETE CASCADE,
+);
+
+CREATE UNIQUE INDEX idx_admins_unique_username ON admins (username);
+CREATE UNIQUE INDEX idx_admins_unique_email ON admins (email);
+
+{{- range .Databases }}
+    {{- if eq .Type "postgres" }}
+        {{- range .Models }}
+            {{- if eq .Type "user" }}
+CREATE TABLE {{ .Name }} (
+    id BIGSERIAL PRIMARY KEY,
+    first_name TEXT,
+    last_name TEXT,
+    username TEXT NOT NULL,
+    email TEXT,
+    password_hashed TEXT,
+    password_salt TEXT,
+    status TEXT,
+    created_by BIGSERIAL,
+    updated_by BIGSERIAL,
+    deleted_by BIGSERIAL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
+    deleted_at TIMESTAMP,
+    CONSTRAINT fk_created_by_{{ .Owner }}
+        FOREIGN KEY(created_by)
+            REFERENCES {{ .Owner }}s(id)
+            ON DELETE CASCADE,
+    CONSTRAINT fk_updated_by_{{ .Owner }}
+        FOREIGN KEY(created_by)
+            REFERENCES {{ .Owner }}s(id)
+            ON DELETE CASCADE,
+    CONSTRAINT fk_deleted_by_{{ .Owner }}
+        FOREIGN KEY(deleted_by)
+            REFERENCES {{ .Owner }}s(id)
+            ON DELETE CASCADE,
+);
+
+CREATE UNIQUE INDEX idx_{{ .Name }}_unique_username ON {{ .Name }} (username);
+CREATE UNIQUE INDEX idx_{{ .Name }}_unique_email ON {{ .Name }} (email);
+
+            {{- else }}
+
+CREATE TABLE {{ .Name }} (
+    id BIGSERIAL PRIMARY KEY,
+    
+    {{- range .Properties }}
+    {{ .Name }} {{ .Type }}{{ if .NotNull }} NOT NULL {{ end }},
+    {{- end }}
+
+    created_by BIGSERIAL,
+    updated_by BIGSERIAL,
+    deleted_by BIGSERIAL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
+    deleted_at TIMESTAMP,
+    CONSTRAINT fk_created_by_{{ .Owner }}
+        FOREIGN KEY(created_by)
+            REFERENCES {{ .Owner }}s(id)
+            ON DELETE CASCADE,
+    CONSTRAINT fk_updated_by_{{ .Owner }}
+        FOREIGN KEY(created_by)
+            REFERENCES {{ .Owner }}s(id)
+            ON DELETE CASCADE,
+    CONSTRAINT fk_deleted_by_{{ .Owner }}
+        FOREIGN KEY(deleted_by)
+            REFERENCES {{ .Owner }}s(id)
+            ON DELETE CASCADE,
+);
+            {{- end }}
+        {{- end }}
+    {{- end }}
+{{- end }}
+
+
+-- migrate:down
+{{- range .Databases }}
+    {{- if eq .Type "postgres" }}
+        {{- range .Models }}
+DROP TABLE {{ .Name }};
+        {{- end }}
+    {{- end }}
+{{- end }}
+
+DROP TABLE admins;

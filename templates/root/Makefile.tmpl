@@ -5,13 +5,7 @@ init:
 	mv env.sample .env
 	mv gitignore .gitignore
 
-toolsup:
-	docker-compose -f tools/docker-compose.yaml up -d
-
-toolsdown:
-	docker-compose -f tools/docker-compose.yaml down
-
-prepdev:
+dep:
 	brew install dbmate
 	go install github.com/kyleconroy/sqlc/cmd/sqlc@latest
 	go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@latest
@@ -20,15 +14,6 @@ prepdev:
 migrate:
 	dbmate up
 
-impl:
-	impl -iface=generic_backend/api/gen.ServerInterface -impl=generic_backend/api.ServerImpl -w
-	impl -iface=generic_backend/api.OpsService -impl=generic_backend/ops.service -w
-	impl -iface=generic_backend/api.AuthService -impl=generic_backend/auth.service -w
-	impl -iface=generic_backend/api.DeviceService -impl=generic_backend/devices.service -w
-	impl -iface=generic_backend/api.UserService -impl=generic_backend/users.service -w
-	impl -iface=generic_backend/api.ObjectService -impl=generic_backend/objects.service -w
-	impl -iface=generic_backend/api.CategoryService -impl=generic_backend/categories.service -w
-
 apigen:
 	rm -rf api/gen
 	mkdir api/gen
@@ -36,8 +21,8 @@ apigen:
 	$(MAKE) impl
 
 dbgen:
-	rm -rf db/dbgen
-	sqlc -f db/sqlc.config.yaml generate
+	rm -rf db/postgres/dbgen
+	sqlc -f db/postgres/sqlc.config.yaml generate
 
 genall: migrate prepdev apigen dbgen
 	go mod tidy

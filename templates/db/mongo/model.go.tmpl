@@ -1,0 +1,22 @@
+package executor
+
+import (
+	"context"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+type Repo interface {
+	InsertOne(ctx context.Context, model *Order) (interface{}, error)
+	FindByStatusOrderByCreatedAtDesc(ctx context.Context, symbol string) ([]*Order, error)
+}
+
+type Order struct {
+	ID        primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	PlanID    primitive.ObjectID `json:"planId" bson:"_id"`
+	Symbol    string             `json:"symbol" bson:"symbol"`
+	Type      string             `json:"type" bson:"type"`
+	Price     float64            `json:"price" bson:"price"`
+	Status    string             `json:"status" bson:"status"`
+	CreatedAt int64              `json:"createdAt" bson:"createdAt"`
+}

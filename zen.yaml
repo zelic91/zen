@@ -16,17 +16,21 @@ env:
   - name: DATABASE_URL
     structName: DatabaseURL
     type: string
-database:
+databases:
   - name: postgres
     type: postgres
     models:
-      - name: admin
+      - name: users
+        type: user
+        owner: admin
+      - name: devices
+        type: data
+        owner: user
         properties:
-          - name: username
+          - name: platform
             type: string
-          - name: password
+          - name: device_token
             type: string
-            secured: true
 
   - name: mongo
     type: mongo

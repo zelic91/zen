@@ -61,9 +61,12 @@ func create(configFile string, outputDir string) {
 
 	// Generate commands
 
-	// Generate database
+	// Generate databases
+	generateDatabases(outputDir, config)
 
 	// Generate services
+
+	log.Println("DONE.")
 }
 
 func makeTargetPath(outputDir string) error {
@@ -98,7 +101,7 @@ func generateRootFiles(
 ) {
 	generateGeneric(
 		outputPath,
-		fmt.Sprintf("%s/%s", rootTemplatePath, "root"),
+		rootTemplatePath+"/root",
 		config,
 	)
 }
@@ -108,24 +111,32 @@ func generateConfig(
 	config *config.Config,
 ) {
 	generateGeneric(
-		fmt.Sprintf("%s/%s", outputPath, "config"),
-		fmt.Sprintf("%s/%s", rootTemplatePath, "config"),
+		outputPath+"/config",
+		rootTemplatePath+"/config",
 		config,
 	)
 }
 
-// func generateDatabases(
-// 	outputPath string,
-// 	config *config.Config,
-// ) {
-// 	for _, db := range config.Databases {
-// 		generateGeneric(
-// 			outputPath+"db",
-// 			fmt.Sprintf("%s/%s/db.sql", rootTemplatePath, "db"),
-// 			config,
-// 		)
-// 	}
-// }
+func generateDatabases(
+	outputPath string,
+	config *config.Config,
+) {
+	for _, db := range config.Databases {
+		if db.IsPostgres() {
+			generateGeneric(
+				outputPath+"/db/postgres",
+				rootTemplatePath+"/db/postgres",
+				config,
+			)
+		} else {
+			generateGeneric(
+				outputPath+"/db/mongo",
+				rootTemplatePath+"/db/mongo",
+				config,
+			)
+		}
+	}
+}
 
 // This method should be general enough to be reused
 // - outputPath: the target path that host the generated files
@@ -150,7 +161,7 @@ func generateGeneric(
 		dirName := stack.Pop().(string)
 		dirs, err := RootFs.ReadDir(fmt.Sprintf("%s%s", inputPath, dirName))
 		if err != nil {
-			fmt.Printf("Error parsing templates: %v\n", err)
+			log.Printf("Error parsing templates: %v\n", err)
 		}
 
 		for _, dir := range dirs {
@@ -159,7 +170,8 @@ func generateGeneric(
 				stack.Push(newDirName)
 			} else {
 				templateMap[dir.Name()] = newDirName
-				fileList = append(fileList, fmt.Sprintf("%s%s", inputPath, newDirName))
+				filePath := inputPath + newDirName
+				fileList = append(fileList, filePath)
 			}
 		}
 	}
@@ -177,13 +189,13 @@ func generateGeneric(
 		dirName := filepath.Dir(outFileName)
 		err := os.MkdirAll(dirName, os.ModePerm)
 		if err != nil {
-			fmt.Printf("error creating parent dirs %v", err)
+			log.Printf("error creating parent dirs %v", err)
 			return
 		}
 
 		filePath, err = os.Create(outFileName)
 		if err != nil {
-			fmt.Printf("error creating output file %v", err)
+			log.Printf("error creating output file %s %v", tmpl.Name(), err)
 			return
 		}
 
@@ -198,7 +210,7 @@ func generateGeneric(
 
 		if !strings.Contains(tmpl.Name(), ".go") {
 			filePath.Write(rendered.Bytes())
-			return
+			continue
 		}
 
 		formatted, err := format.Source(rendered.Bytes())

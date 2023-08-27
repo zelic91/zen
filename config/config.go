@@ -14,19 +14,35 @@ type Command struct {
 }
 
 type Database struct {
-	Name string
-	Type string
+	Name   string
+	Type   string
+	Models []Model
+}
+
+func (d *Database) IsPostgres() bool {
+	return d.Name == "postgres"
 }
 
 type Model struct {
 	Name       string
+	Type       string
+	Owner      string
 	Properties []ModelProperties
 }
 
 type ModelProperties struct {
-	Name string
-	Type string
-	Ref  string
+	Name       string
+	Type       string
+	Owner      string
+	NotNull    bool `yaml:"notNull"`
+	References string
+	Unique     bool
+}
+
+type ModelReference struct {
+	ForeignKey string
+	From       string
+	To         string
 }
 
 type Service struct {
