@@ -61,6 +61,7 @@ func create(configFile string, outputDir string) {
 	generateConfig(outputDir, config)
 
 	// Generate commands
+	generateCommands(outputDir, config)
 
 	// Generate databases
 	generateDatabases(outputDir, config)
@@ -118,6 +119,25 @@ func generateConfig(
 	)
 }
 
+func generateCommands(
+	outputPath string,
+	config *config.Config,
+) {
+	generateSpecific(
+		outputPath+"/cmd/root.go",
+		rootTemplatePath+"/cmd/root.go.tmpl",
+		config,
+	)
+
+	for _, command := range config.Commands {
+		generateSpecific(
+			outputPath+"/cmd/"+command.Name+".go",
+			rootTemplatePath+"/cmd/command.go.tmpl",
+			config,
+		)
+	}
+}
+
 func generateDatabases(
 	outputPath string,
 	config *config.Config,
@@ -140,8 +160,8 @@ func generateDatabases(
 }
 
 // This method should be general enough to be reused
-// - outputPath: the target path that host the generated files
-// - inputPath: the original path of the templates
+// - outputPath: the target path that host the generated files, which is a folder
+// - inputPath: the original path of the templates, which is a folder
 // - config: the config to be used as the data for rendering templates
 func generateGeneric(
 	outputPath string,
@@ -221,4 +241,61 @@ func generateGeneric(
 
 		filePath.Write(formatted)
 	}
+}
+
+// This method is used to generate a specific template
+// - outputPath: the specific path of the generated file
+// - template
+func generateSpecific(
+	outputPath string,
+	inputPath string,
+	config *config.Config,
+) {
+	templates = template.Must(template.New("zen-template").Funcs(sprig.FuncMap()).Funcs(funcs.FuncMap()).ParseFS(
+		RootFs,
+		inputPath,
+	))
+
+	if len(templates.Templates()) > 1 {
+		log.Fatalf("invalid inputPath value: %s\n. Abort", inputPath)
+		return
+	}
+
+	// There must be only one template that match the inputPath
+	tmpl := templates.Templates()[0]
+
+	var filePath *os.File
+	dirName := filepath.Dir(outputPath)
+	err := os.MkdirAll(dirName, os.ModePerm)
+	if err != nil {
+		log.Printf("error creating parent dirs %v", err)
+		return
+	}
+
+	filePath, err = os.Create(outputPath)
+	if err != nil {
+		log.Printf("error creating output file %s %v", tmpl.Name(), err)
+		return
+	}
+
+	defer filePath.Close()
+
+	tmpl = tmpl.Funcs(sprig.FuncMap())
+
+	var rendered bytes.Buffer
+	if err := templates.ExecuteTemplate(&rendered, tmpl.Name(), config); err != nil {
+		log.Fatal(err)
+	}
+
+	if !strings.Contains(tmpl.Name(), ".go") {
+		filePath.Write(rendered.Bytes())
+		return
+	}
+
+	formatted, err := format.Source(rendered.Bytes())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	filePath.Write(formatted)
 }

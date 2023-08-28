@@ -51,6 +51,8 @@ databases:
           - name: status
             type: string
 
+api:
+
 services:
   - name: admin
     database: postgres
