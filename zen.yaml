@@ -31,17 +31,25 @@ databases:
             type: string
           - name: device_token
             type: string
+          - name: status
+            type: string
 
   - name: mongo
     type: mongo
-    schema:
-      - name: admin
+    models:
+      - name: users
+        type: user
+        owner: admin
+      - name: devices
+        type: data
+        owner: user
         properties:
-          - name: username
+          - name: platform
             type: string
-          - name: password
+          - name: device_token
             type: string
-            secured: true
+          - name: status
+            type: string
 
 services:
   - name: admin

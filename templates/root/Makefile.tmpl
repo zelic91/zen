@@ -20,6 +20,20 @@ apigen:
 	oapi-codegen -package gen api/openapi.yaml > api/gen/spec.gen.go
 	$(MAKE) impl
 
+dbgen_mongo:
+{{- range .Databases }}
+    {{- if eq .Type "mongo" }}
+        {{- range .Models }}
+	repogen -pkg=db/mongo -dest=db/mongo/{{ .Name | singularize }}_repo.go \
+			-model={{ .Name | singularize | title }} -repo={{ .Name | singularize | title }}Repo
+		{{- end }}
+	{{- end }}
+{{- end }}
+
+dbgen_postgres:
+	rm -rf db/postgres/dbgen
+	sqlc -f db/postgres/sqlc.config.yaml generate
+
 dbgen:
 	rm -rf db/postgres/dbgen
 	sqlc -f db/postgres/sqlc.config.yaml generate
