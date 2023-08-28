@@ -3,3 +3,5 @@ deployment.yaml
 Dockerfile
 .github
 deployment
+.DS_Store
+testgen

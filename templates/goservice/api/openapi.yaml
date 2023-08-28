@@ -1,0 +1,23 @@
+paths:
+  /authors:
+    get:
+      summary: Return  a list of authors
+      responses:
+        "200":
+          description: A JSON array of tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Author"
+
+components:
+  schemas:
+    Author:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string

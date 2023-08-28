@@ -1,0 +1,58 @@
+commands:
+  - name: server
+    type: api
+  - name: websocket
+    type: websocket
+  - name: crawler
+    type: worker
+
+moduleName: test-zen
+env:
+  - name: JWT_KEY
+    structName: JWTKey
+    type: string
+  - name: PORT
+    type: int
+  - name: DATABASE_URL
+    structName: DatabaseURL
+    type: string
+databases:
+  - name: postgres
+    type: postgres
+    models:
+      - name: users
+        type: user
+        owner: admin
+      - name: devices
+        type: data
+        owner: user
+        properties:
+          - name: platform
+            type: string
+          - name: device_token
+            type: string
+          - name: status
+            type: string
+
+  - name: mongo
+    type: mongo
+    models:
+      - name: users
+        type: user
+        owner: admin
+      - name: devices
+        type: data
+        owner: user
+        properties:
+          - name: platform
+            type: string
+          - name: device_token
+            type: string
+          - name: status
+            type: string
+
+api:
+
+services:
+  - name: admin
+    database: postgres

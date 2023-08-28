@@ -1,0 +1,54 @@
+package mongo
+
+import (
+	"context"
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+{{- range .Databases }}
+    {{- if eq .Type "mongo" }}
+        {{range .Models }}
+
+// {{ .Name | title }}
+type {{ .Name | singularize | title }}Repo interface {
+	InsertOne(ctx context.Context, model *{{ .Name | singularize | title }}) (interface{}, error)
+	FindByID(ctx context.Context, id primitive.ObjectID) (*{{ .Name | singularize | title }}, error)
+	FindAll(ctx context.Context) ([]*{{ .Name | singularize | title }}, error)
+	UpdateByID(ctx context.Context, model *{{ .Name | singularize | title }}, id primitive.ObjectID) (bool, error)
+	DeleteByID(ctx context.Context, id primitive.ObjectID) (bool, error)
+	DeleteAll(ctx context.Context) (int, error)
+{{- if eq .Type "user" }}
+	FindByUsername(ctx context.Context, username string) (*{{ .Name | singularize | title }}, error)
+	FindByEmail(ctx context.Context, email string) (*{{ .Name | singularize | title }}, error)
+{{- end }}
+}
+
+type {{ .Name | singularize | title }} struct {
+	ID        primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+{{- if eq .Type "user" }}
+	FirstName      string             `json:"first_name" bson:"first_name"`
+	LastName       string             `json:"last_name" bson:"last_name"`
+	Username       string             `json:"username" bson:"username"`
+	Email          string             `json:"email" bson:"email"`
+	PasswordHashed string             `json:"password_hashed" bson:"password_hashed"`
+	PasswordSalt   string             `json:"password_salt" bson:"password_salt"`
+	Status         string             `json:"status" bson:"status"`
+{{- end }}
+{{- range .Properties }}
+	{{ .Name | camelcase }}    {{ .Type }}             `json:"{{ .Name | lower }}" bson:"{{ .Name | lower }}"`
+{{- end }}
+	CreatedBy primitive.ObjectID `json:"created_by" bson:"created_by"`
+	UpdatedBy primitive.ObjectID `json:"updated_by" bson:"updated_by"`
+	DeletedBy primitive.ObjectID `json:"deleted_by" bson:"deleted_by"`
+	CreatedAt time.Time          `json:"created_at" bson:"created_at"`
+	UpdatedAt time.Time          `json:"updated_at" bson:"updated_at"`
+	DeletedAt time.Time          `json:"deleted_at" bson:"deleted_at"`
+}
+
+
+		{{- end }}
+	{{- end }}
+{{- end }}
+
