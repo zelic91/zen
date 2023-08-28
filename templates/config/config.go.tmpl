@@ -1,9 +1,38 @@
 package config
 
+import (
+	"fmt"
+
+	"github.com/spf13/viper"
+)
+
 type Config struct {
 {{- with .Env }}
 	{{- range . }}
 	{{ if .StructName }}{{ .StructName }}{{ else }}{{ .Name | lower | camelcase }}{{ end }} {{ .Type }} `mapstructure:"{{ .Name }}"`
 	{{- end }}
 {{- end }}
+}
+
+func InitConfig() *Config {
+	viper.SetConfigName(".env")
+	viper.SetConfigType("env")
+	viper.AddConfigPath(".")
+
+{{- range .Env }}
+	viper.BindEnv("{{ .Name }}")
+{{- end }}
+
+	viper.AutomaticEnv()
+
+	// For .env file only
+	err := viper.ReadInConfig()
+
+	conf := &Config{}
+	err = viper.Unmarshal(conf)
+	if err != nil {
+		fmt.Printf("unable to decode into config struct, %v", err)
+	}
+
+	return conf
 }

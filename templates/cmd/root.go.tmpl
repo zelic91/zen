@@ -7,7 +7,6 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -26,30 +25,4 @@ func Execute() {
 
 func init() {
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-}
-
-func initConfig() *config.Config {
-	viper.SetConfigName(".env")
-	viper.SetConfigType("env")
-	viper.AddConfigPath(".")
-
-	viper.BindEnv("DATABASE_URL")
-	viper.BindEnv("PORT")
-
-	viper.AutomaticEnv()
-
-	// For .env file only
-	err := viper.ReadInConfig()
-
-	conf := &config.Config{}
-	err = viper.Unmarshal(conf)
-	if err != nil {
-		fmt.Printf("unable to decode into config struct, %v", err)
-	}
-
-	return conf
-}
-
-func initDatabase(config *config.Config) *sqlx.DB {
-	return sqlx.MustOpen("postgres", config.DatabaseURL)
 }
