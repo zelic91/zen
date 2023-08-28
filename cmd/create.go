@@ -17,6 +17,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/zelic91/zen/common"
 	"github.com/zelic91/zen/config"
+	"github.com/zelic91/zen/funcs"
 	"gopkg.in/yaml.v3"
 )
 
@@ -176,7 +177,7 @@ func generateGeneric(
 		}
 	}
 
-	templates = template.Must(template.New("zen-template").Funcs(sprig.FuncMap()).ParseFS(
+	templates = template.Must(template.New("zen-template").Funcs(sprig.FuncMap()).Funcs(funcs.FuncMap()).ParseFS(
 		RootFs,
 		fileList...,
 	))
