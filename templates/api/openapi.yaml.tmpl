@@ -29,6 +29,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/{{ .ResponseBody }}"
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
       
       {{- end }}
     {{- end }}
