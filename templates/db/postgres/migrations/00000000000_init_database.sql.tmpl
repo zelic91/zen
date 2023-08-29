@@ -25,7 +25,7 @@ CREATE TABLE admins (
     CONSTRAINT fk_deleted_by_admin
         FOREIGN KEY(deleted_by)
             REFERENCES admins(id)
-            ON DELETE CASCADE,
+            ON DELETE CASCADE
 );
 
 CREATE UNIQUE INDEX idx_admins_unique_username ON admins (username);
@@ -61,7 +61,7 @@ CREATE TABLE {{ $modelName }} (
     CONSTRAINT fk_deleted_by_{{ .Owner }}
         FOREIGN KEY(deleted_by)
             REFERENCES {{ .Owner }}s(id)
-            ON DELETE CASCADE,
+            ON DELETE CASCADE
 );
 
 CREATE UNIQUE INDEX idx_{{ $modelName }}_unique_username ON {{ $modelName }} (username);
@@ -93,7 +93,7 @@ CREATE TABLE {{ $modelName }} (
     CONSTRAINT fk_deleted_by_{{ .Owner }}
         FOREIGN KEY(deleted_by)
             REFERENCES {{ .Owner }}s(id)
-            ON DELETE CASCADE,
+            ON DELETE CASCADE
 );
             {{- end }}
         {{- end }}
