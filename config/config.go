@@ -8,7 +8,7 @@ type Config struct {
 	Commands    map[string]Command
 	Databases   map[string]Database
 	Services    []Service
-	Env         []Env
+	Env         map[string]Env
 }
 
 type Command struct {

@@ -7,10 +7,8 @@ import (
 )
 
 type Config struct {
-{{- with .Env }}
-	{{- range . }}
-	{{ if .StructName }}{{ .StructName }}{{ else }}{{ .Name | lower | camelcase }}{{ end }} {{ .Type }} `mapstructure:"{{ .Name }}"`
-	{{- end }}
+{{- range $name, $value := .Env }}
+	{{ if .StructName }}{{ .StructName }}{{ else }}{{ $name | lower | camelcase }}{{ end }} {{ .Type }} `mapstructure:"{{ $name }}"`
 {{- end }}
 }
 
@@ -19,8 +17,8 @@ func InitConfig() *Config {
 	viper.SetConfigType("env")
 	viper.AddConfigPath(".")
 
-{{- range .Env }}
-	viper.BindEnv("{{ .Name }}")
+{{- range $name, $value := .Env }}
+	viper.BindEnv("{{ $name }}")
 {{- end }}
 
 	viper.AutomaticEnv()

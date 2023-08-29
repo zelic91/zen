@@ -2,12 +2,12 @@ moduleName: test-zen
 title: Test Gen
 description: Sample configuration for gen
 env:
-  - name: JWT_KEY
+  JWT_KEY:
     structName: JWTKey
     type: string
-  - name: PORT
+  PORT:
     type: int
-  - name: DATABASE_URL
+  DATABASE_URL:
     structName: DatabaseURL
     type: string
 
