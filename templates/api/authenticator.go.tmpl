@@ -1,0 +1,191 @@
+package api
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"{{ .ModuleName }}/api/gen"
+	"{{ .ModuleName }}/common"
+	"net/http"
+	"strings"
+
+	"github.com/deepmap/oapi-codegen/pkg/middleware"
+	"github.com/getkin/kin-openapi/openapi3filter"
+	"github.com/labstack/echo/v4"
+	"github.com/lestrrat-go/jwx/jwt"
+)
+
+var (
+	ErrNoAuthHeader      = errors.New("authorization header is missing")
+	ErrInvalidAuthHeader = errors.New("authorization header is malformed")
+	ErrClaimsInvalid     = errors.New("provided claims do not match expected scopes")
+)
+
+type JWSValidator interface {
+	ValidateJWS(jws string) (jwt.Token, error)
+}
+
+func GetJWSFromRequest(req *http.Request) (string, error) {
+	authHeader := req.Header.Get("Authorization")
+
+	if authHeader == "" {
+		return "", ErrNoAuthHeader
+	}
+
+	prefix := "Bearer "
+	if !strings.HasPrefix(authHeader, prefix) {
+		return "", ErrInvalidAuthHeader
+	}
+
+	return strings.TrimPrefix(authHeader, prefix), nil
+}
+
+func NewAuthenticator(v JWSValidator) openapi3filter.AuthenticationFunc {
+	return func(ctx context.Context, input *openapi3filter.AuthenticationInput) error {
+		return Authenticate(v, ctx, input)
+	}
+}
+
+func Authenticate(v JWSValidator, ctx context.Context, input *openapi3filter.AuthenticationInput) error {
+	if input.SecuritySchemeName != "BearerAuth" {
+		return nil
+	}
+
+	jws, err := GetJWSFromRequest(input.RequestValidationInput.Request)
+	if err != nil {
+		return fmt.Errorf("getting jws: %w", err)
+	}
+
+	token, err := v.ValidateJWS(jws)
+	if err != nil {
+		return fmt.Errorf("validating JWS: %w", err)
+	}
+
+	err = CheckPermissionClaims(input.Scopes, token)
+
+	if err != nil {
+		return fmt.Errorf("permission claims don't match: %w", err)
+	}
+	return nil
+}
+
+func CheckPermissionClaims(expectedClaims []string, token jwt.Token) error {
+	claims, err := GetPermissionClaimsFromToken(token)
+	if err != nil {
+		return fmt.Errorf("getting claims from token: %w", err)
+	}
+
+	claimsMap := make(map[string]bool, len(claims))
+	for _, c := range claims {
+		claimsMap[c] = true
+	}
+
+	for _, e := range expectedClaims {
+		if !claimsMap[e] {
+			return ErrClaimsInvalid
+		}
+	}
+	return nil
+}
+
+func GetPermissionClaimsFromToken(token jwt.Token) ([]string, error) {
+	rawPerms, found := token.Get(PermissionsClaim)
+	if !found {
+		return make([]string, 0), nil
+	}
+
+	rawList, ok := rawPerms.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("'%s' claim is unexpected type'", PermissionsClaim)
+	}
+
+	claims := make([]string, len(rawList))
+
+	for i, rawClaim := range rawList {
+		var ok bool
+		claims[i], ok = rawClaim.(string)
+		if !ok {
+			return nil, fmt.Errorf("%s[%d] is not a string", PermissionsClaim, i)
+		}
+	}
+	return claims, nil
+}
+
+func GetUserInfoClaims(v JWSValidator, req *http.Request) (*common.UserClaims, error) {
+
+	jws, err := GetJWSFromRequest(req)
+	if err != nil {
+		return nil, fmt.Errorf("getting jws: %w", err)
+	}
+
+	token, err := v.ValidateJWS(jws)
+	if err != nil {
+		return nil, fmt.Errorf("validating JWS: %w", err)
+	}
+
+	userInfoClaims, found := token.Get(UserInfoClaim)
+	if !found {
+		return nil, errors.New("user info invalid")
+	}
+
+	ret := NewUserClaimsFromMap(userInfoClaims.(map[string]interface{}))
+
+	return ret, nil
+}
+
+func CreateUserMiddleware(v JWSValidator) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+
+			jws := c.Request().Header.Get("Authorization")
+			if len(jws) == 0 {
+				next(c)
+				return nil
+			}
+
+			user, err := GetUserInfoClaims(v, c.Request())
+			if err != nil {
+				fmt.Printf("error in user middleware: %v", err)
+				return err
+			}
+
+			ctx := NewContextWithUserClaims(c, user)
+			next(ctx)
+			return nil
+		}
+	}
+}
+
+func CreateAuthMiddleware(v JWSValidator) ([]echo.MiddlewareFunc, error) {
+	spec, err := gen.GetSwagger()
+	if err != nil {
+		return nil, fmt.Errorf("loading spec: %w", err)
+	}
+
+	validatorMiddleware := middleware.OapiRequestValidatorWithOptions(spec,
+		&middleware.Options{
+			Options: openapi3filter.Options{
+				AuthenticationFunc: NewAuthenticator(v),
+			},
+		},
+	)
+
+	userMiddleware := CreateUserMiddleware(v)
+
+	return []echo.MiddlewareFunc{validatorMiddleware, userMiddleware}, nil
+}
+
+func NewContextWithUserClaims(c echo.Context, user *common.UserClaims) echo.Context {
+	c.Set("User", user)
+	return c
+}
+
+func GetUserClaimsFromContext(c echo.Context) *common.UserClaims {
+	return c.Get("User").(*common.UserClaims)
+}
+
+func NewUserClaimsFromMap(m map[string]interface{}) *common.UserClaims {
+	return &common.UserClaims{
+		ID: int64(m["id"].(float64)),
+	}
+}

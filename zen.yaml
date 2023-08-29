@@ -1,12 +1,6 @@
-commands:
-  - name: server
-    type: api
-  - name: websocket
-    type: websocket
-  - name: crawler
-    type: worker
-
 moduleName: test-zen
+title: Test Gen
+description: Sample configuration for gen
 env:
   - name: JWT_KEY
     structName: JWTKey
@@ -16,6 +10,15 @@ env:
   - name: DATABASE_URL
     structName: DatabaseURL
     type: string
+
+commands:
+  - name: server
+    type: api
+  - name: websocket
+    type: websocket
+  - name: crawler
+    type: worker
+
 databases:
   - name: postgres
     type: postgres
@@ -52,6 +55,28 @@ databases:
             type: string
 
 api:
+  title: Main API
+  description: Main API Description
+  paths:
+    /auth/signin:
+      post:
+        summary: Sign in
+        operationId: signIn
+        requestBody: SignInRequest
+        successResponse: 200
+        responseBody: AuthResponse
+        security: BearerAuth
+
+  schemas:
+    SignInRequest:
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+        password:
+          type: string
 
 services:
   - name: admin

@@ -1,0 +1,387 @@
+openapi: 3.1.0
+info:
+  version: 1.0.0
+  title: General API
+  description: This is the service to serve all the basic needs
+paths:
+  /:
+    get:
+      summary: Get service info
+      operationId: getInfo
+      responses:
+        "200":
+          description: Service info response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServerInfo"
+
+  /auth/signup:
+    post:
+      summary: Sign up API
+      operationId: signUp
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        description: Request body
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignUpRequest"
+
+      responses:
+        "200":
+          description: Sign up successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponseBody"
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
+  /auth/login:
+    post:
+      summary: Login API
+      operationId: login
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        description: Request body
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+
+      responses:
+        "200":
+          description: Login successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponseBody"
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
+  /users:
+    get:
+      summary: Return a list of users
+      operationId: getUsers
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: A list of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
+  /devices:
+    post:
+      summary: Register a new device (including device token)
+      operationId: registerDevice
+      security:
+        - BearerAuth: []
+      requestBody:
+        description: Request body
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeviceRequest"
+      responses:
+        "200":
+          $ref: "#/components/responses/DefaultSuccessResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
+    delete:
+      summary: Unregister a device (including device token)
+      operationId: unregisterDevice
+      security:
+        - BearerAuth: []
+      requestBody:
+        description: Request body
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeviceRequest"
+      responses:
+        "200":
+          $ref: "#/components/responses/DefaultSuccessResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
+  /categories:
+    get:
+      summary: Get category list
+      operationId: getCategories
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Search text
+        - in: query
+          name: offset
+          schema:
+            type: integer
+          description: Offset
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          description: Limit
+      responses:
+        "200":
+          description: All categories
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Categories"
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
+  /objects:
+    get:
+      summary: Get objects with pagination, filter and search
+      operationId: getObjects
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Search text
+        - in: query
+          name: offset
+          schema:
+            type: integer
+          description: Offset
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          description: Limit
+      responses:
+        "200":
+          description: List of objects per page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PagedObjects"
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-KEY
+
+  responses:
+    DefaultSuccessResponse:
+      description: Success response
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Success"
+
+    UnauthorizedError:
+      description: API key is missing or invalid
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+    BadRequestError:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+  schemas:
+    ServerInfo:
+      type: object
+      required:
+        - name
+        - version
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        error:
+          type: string
+        code:
+          type: integer
+        message:
+          type: string
+
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    SignUpRequest:
+      type: object
+      required:
+        - username
+        - password
+        - password_confirmation
+      properties:
+        username:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        password_confirmation:
+          type: string
+
+    DeviceRequest:
+      type: object
+      required:
+        - deviceToken
+        - platform
+      properties:
+        deviceToken:
+          type: string
+        platform:
+          type: string
+
+    User:
+      type: object
+      required:
+        - id
+        - username
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+
+    Category:
+      type: object
+      required:
+        - id
+        - title
+        - status
+      properties:
+        id:
+          type: integer
+        categoryId:
+          type: integer
+        title:
+          type: string
+        status:
+          type: string
+
+    Categories:
+      type: array
+      items:
+        $ref: "#/components/schemas/Category"
+
+    Object:
+      type: object
+      required:
+        - id
+        - title
+        - content
+        - category_id
+        - status
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        content:
+          type: string
+        category_id:
+          type: integer
+        status:
+          type: string
+
+    Objects:
+      type: array
+      items:
+        $ref: "#/components/schemas/Object"
+
+    PagedObjects:
+      type: object
+      required:
+        - currentPage
+        - totalPage
+        - data
+      properties:
+        currentPage:
+          type: integer
+        totalPage:
+          type: integer
+        data:
+          $ref: "#/components/schemas/Objects"
+
+    AuthResponseBody:
+      type: object
+      required:
+        - accessToken
+      properties:
+        accessToken:
+          type: string
+
+    Success:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          default: Success

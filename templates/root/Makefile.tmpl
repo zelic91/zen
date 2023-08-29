@@ -9,7 +9,6 @@ dep:
 	brew install dbmate
 	go install github.com/kyleconroy/sqlc/cmd/sqlc@latest
 	go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@latest
-	go install marwan.io/impl/cmd/impl@latest
 
 migrate:
 	dbmate up
@@ -18,7 +17,6 @@ apigen:
 	rm -rf api/gen
 	mkdir api/gen
 	oapi-codegen -package gen api/openapi.yaml > api/gen/spec.gen.go
-	$(MAKE) impl
 
 dbgen_mongo:
 {{- range .Databases }}

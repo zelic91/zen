@@ -60,8 +60,13 @@ func create(configFile string, outputDir string) {
 	// Generate config
 	generateConfig(outputDir, config)
 
+	// Generate common
+	generateCommon(outputDir, config)
+
 	// Generate commands
 	generateCommands(outputDir, config)
+
+	generateApi(outputDir, config)
 
 	// Generate databases
 	generateDatabases(outputDir, config)
@@ -119,6 +124,17 @@ func generateConfig(
 	)
 }
 
+func generateCommon(
+	outputPath string,
+	config *config.Config,
+) {
+	generateGeneric(
+		outputPath+"/common",
+		rootTemplatePath+"/common",
+		config,
+	)
+}
+
 func generateCommands(
 	outputPath string,
 	config *config.Config,
@@ -157,6 +173,17 @@ func generateDatabases(
 			)
 		}
 	}
+}
+
+func generateApi(
+	outputPath string,
+	config *config.Config,
+) {
+	generateGeneric(
+		outputPath+"/api",
+		rootTemplatePath+"/api",
+		config,
+	)
 }
 
 // This method should be general enough to be reused

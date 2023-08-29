@@ -1,0 +1,116 @@
+
+openapi: 3.1.0
+{{- with .Api}}
+info:
+  version: 1.0.0
+  title: {{ .Title }}
+  description: {{ .Description }}
+paths:
+  {{- range $path, $methods := .Paths }}
+  {{ $path }}:
+    {{- range $method, $value := $methods }}
+    {{ $method }}:
+      {{- with $value }}
+      summary: {{ .Summary }}
+      operationId: {{ .OperationId }}
+      security:
+        - {{ .Security }}: []
+      requestBody:
+        description: Request body
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/{{ .RequestBody }}"
+      responses:
+        "{{ .SuccessResponse }}":
+          description: Success response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/{{ .ResponseBody }}"
+      
+      {{- end }}
+
+
+    {{- end }}
+  {{- end }}
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-KEY
+
+  responses:
+    Default:
+      description: Success response
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/DefaultResponse"
+
+    UnauthorizedError:
+      description: API key is missing or invalid
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+    BadRequestError:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+  schemas:
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        error:
+          type: string
+        code:
+          type: integer
+        message:
+          type: string
+
+    AuthResponse:
+      type: object
+      required:
+        - accessToken
+      properties:
+        accessToken:
+          type: string
+
+    DefaultResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          default: Success
+
+    {{- range $key, $value := .Schemas }}
+    {{ $key }}:
+      type: object
+      required:
+        {{- range .Required }}
+        - {{ . }}
+        {{- end }}
+      properties:
+        {{- range $name, $property := .Properties }}
+        {{ $name }}:
+          type: {{ .Type }}
+        {{- end }}
+    {{- end }}
+
+{{- end }}
