@@ -5,7 +5,7 @@ type Config struct {
 	Description string
 	ModuleName  string `yaml:"moduleName"`
 	Api         Api
-	Commands    []Command
+	Commands    map[string]Command
 	Databases   map[string]Database
 	Services    []Service
 	Env         []Env

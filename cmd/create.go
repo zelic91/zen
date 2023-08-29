@@ -145,9 +145,9 @@ func generateCommands(
 		config,
 	)
 
-	for _, command := range config.Commands {
+	for name := range config.Commands {
 		generateSpecific(
-			outputPath+"/cmd/"+command.Name+".go",
+			outputPath+"/cmd/"+name+".go",
 			rootTemplatePath+"/cmd/command.go.tmpl",
 			config,
 		)

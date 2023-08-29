@@ -12,11 +12,11 @@ env:
     type: string
 
 commands:
-  - name: server
+  server:
     type: api
-  - name: websocket
+  websocket:
     type: websocket
-  - name: crawler
+  crawler:
     type: worker
 
 databases:
