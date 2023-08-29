@@ -31,11 +31,11 @@ CREATE TABLE admins (
 CREATE UNIQUE INDEX idx_admins_unique_username ON admins (username);
 CREATE UNIQUE INDEX idx_admins_unique_email ON admins (email);
 
-{{- range .Databases }}
+{{- range $key, $value := .Databases }}
     {{- if eq .Type "postgres" }}
-        {{- range .Models }}
+        {{- range $modelName, $model := .Models }}
             {{- if eq .Type "user" }}
-CREATE TABLE {{ .Name }} (
+CREATE TABLE {{ $modelName }} (
     id BIGSERIAL PRIMARY KEY,
     first_name TEXT,
     last_name TEXT,
@@ -64,16 +64,16 @@ CREATE TABLE {{ .Name }} (
             ON DELETE CASCADE,
 );
 
-CREATE UNIQUE INDEX idx_{{ .Name }}_unique_username ON {{ .Name }} (username);
-CREATE UNIQUE INDEX idx_{{ .Name }}_unique_email ON {{ .Name }} (email);
+CREATE UNIQUE INDEX idx_{{ $modelName }}_unique_username ON {{ $modelName }} (username);
+CREATE UNIQUE INDEX idx_{{ $modelName }}_unique_email ON {{ $modelName }} (email);
 
             {{- else }}
 
-CREATE TABLE {{ .Name }} (
+CREATE TABLE {{ $modelName }} (
     id BIGSERIAL PRIMARY KEY,
     
-    {{- range .Properties }}
-    {{ .Name }} {{ .Type }}{{ if .NotNull }} NOT NULL {{ end }},
+    {{- range $propertyName, $property := .Properties }}
+    {{ $propertyName }} {{ .Type }}{{ if .NotNull }} NOT NULL {{ end }},
     {{- end }}
 
     created_by BIGSERIAL,
@@ -104,8 +104,8 @@ CREATE TABLE {{ .Name }} (
 -- migrate:down
 {{- range .Databases }}
     {{- if eq .Type "postgres" }}
-        {{- range .Models }}
-DROP TABLE {{ .Name }};
+        {{- range $modelName, $model := .Models }}
+DROP TABLE {{ $modelName }};
         {{- end }}
     {{- end }}
 {{- end }}

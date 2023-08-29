@@ -23,35 +23,35 @@ databases:
   postgres:
     type: postgres
     models:
-      - name: users
+      users:
         type: user
         owner: admin
-      - name: devices
+      devices:
         type: data
         owner: user
         properties:
-          - name: platform
+          platform:
             type: string
-          - name: device_token
+          device_token:
             type: string
-          - name: status
+          status:
             type: string
 
   mongo:
     type: mongo
     models:
-      - name: users
+      users:
         type: user
         owner: admin
-      - name: devices
+      devices:
         type: data
         owner: user
         properties:
-          - name: platform
+          platform:
             type: string
-          - name: device_token
+          device_token:
             type: string
-          - name: status
+          status:
             type: string
 
 api:
@@ -79,5 +79,6 @@ api:
           type: string
 
 services:
-  - name: auth
+  auth:
     database: postgres
+    model: users

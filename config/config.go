@@ -7,7 +7,7 @@ type Config struct {
 	Api         Api
 	Commands    map[string]Command
 	Databases   map[string]Database
-	Services    []Service
+	Services    map[string]Service
 	Env         map[string]Env
 }
 
@@ -18,14 +18,14 @@ type Command struct {
 
 type Database struct {
 	Type   string
-	Models []Model
+	Models map[string]Model
 }
 
 type Model struct {
 	Name       string
 	Type       string
 	Owner      string
-	Properties []ModelProperties
+	Properties map[string]ModelProperties
 }
 
 type ModelProperties struct {

@@ -1,20 +1,20 @@
 -- Query
 {{- range .Databases }}
     {{- if eq .Type "postgres" }}
-        {{range .Models }}
+        {{range $modelName, $model := .Models }}
             {{- if eq .Type "user" }}
 
--- {{ .Name | title }}
--- name: Get{{ .Name | singularize | title }}ById :one
-SELECT * FROM {{ .Name }}
+-- {{ $modelName | title }}
+-- name: Get{{ $modelName | singularize | title }}ById :one
+SELECT * FROM {{ $modelName }}
 WHERE id = $1 LIMIT 1;
 
--- name: List{{ .Name | title }} :many
-SELECT * FROM {{ .Name }}
+-- name: List{{ $modelName | title }} :many
+SELECT * FROM {{ $modelName }}
 ORDER BY created_at;
 
--- name: Create{{ .Name | singularize | title }} :one
-INSERT INTO {{ .Name }} (
+-- name: Create{{ $modelName | singularize | title }} :one
+INSERT INTO {{ $modelName }} (
     first_name,
     last_name,
     username,
@@ -45,8 +45,8 @@ INSERT INTO {{ .Name }} (
 )
 RETURNING *;
 
--- name: Update{{ .Name | singularize | title }} :one
-UPDATE {{ .Name }}
+-- name: Update{{ $modelName | singularize | title }} :one
+UPDATE {{ $modelName }}
 SET 
     first_name = $2,
     last_name = $3,
@@ -56,25 +56,25 @@ SET
 WHERE id = $1
 RETURNING *;
 
--- name: Delete{{ .Name | singularize | title }} :exec
-DELETE FROM {{ .Name }}
+-- name: Delete{{ $modelName | singularize | title }} :exec
+DELETE FROM {{ $modelName }}
 WHERE id = $1;
 
             {{- else }}
 
--- {{ .Name | title }}
--- name: Get{{ .Name | singularize | title }}ById :one
-SELECT * FROM {{ .Name }}
+-- {{ $modelName | title }}
+-- name: Get{{ $modelName | singularize | title }}ById :one
+SELECT * FROM {{ $modelName }}
 WHERE id = $1 LIMIT 1;
 
--- name: List{{ .Name | title }} :many
-SELECT * FROM {{ .Name }}
+-- name: List{{ $modelName | title }} :many
+SELECT * FROM {{ $modelName }}
 ORDER BY created_at;
 
--- name: Create{{ .Name | singularize | title }} :one
-INSERT INTO {{ .Name }} (
-    {{- range .Properties }}
-    {{ .Name }},
+-- name: Create{{ $modelName | singularize | title }} :one
+INSERT INTO {{ $modelName }} (
+    {{- range $propertyName, $property := .Properties }}
+    {{ $propertyName }},
     {{- end }}
     created_by,
     updated_by,
@@ -92,8 +92,8 @@ INSERT INTO {{ .Name }} (
 )
 RETURNING *;
 
--- name: Update{{ .Name | singularize | title }} :one
-UPDATE {{ .Name }}
+-- name: Update{{ $modelName | singularize | title }} :one
+UPDATE {{ $modelName }}
 SET 
     first_name = $2,
     last_name = $3,
@@ -102,8 +102,8 @@ SET
 WHERE id = $1
 RETURNING *;
 
--- name: Delete{{ .Name | singularize | title }} :exec
-DELETE FROM {{ .Name }}
+-- name: Delete{{ $modelName | singularize | title }} :exec
+DELETE FROM {{ $modelName }}
 WHERE id = $1;
 
             {{- end }}
