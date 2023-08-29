@@ -1,14 +1,15 @@
 package config
 
 type Config struct {
-	Title       string
-	Description string
-	ModuleName  string `yaml:"moduleName"`
-	Api         Api
-	Commands    map[string]Command
-	Databases   map[string]Database
-	Services    map[string]Service
-	Env         map[string]Env
+	Title          string
+	Description    string
+	ModuleName     string `yaml:"moduleName"`
+	Api            Api
+	Commands       map[string]Command
+	Databases      map[string]Database
+	Services       map[string]Service
+	Env            map[string]Env
+	CurrentPackage string
 }
 
 type Command struct {
@@ -44,8 +45,8 @@ type ModelReference struct {
 }
 
 type Service struct {
-	Name     string
 	Database string
+	Model    string
 }
 
 type Env struct {

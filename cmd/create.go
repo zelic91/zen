@@ -72,6 +72,7 @@ func create(configFile string, outputDir string) {
 	generateDatabases(outputDir, config)
 
 	// Generate services
+	generateServices(outputDir, config)
 
 	log.Println("DONE.")
 }
@@ -184,6 +185,21 @@ func generateApi(
 		rootTemplatePath+"/api",
 		config,
 	)
+}
+
+func generateServices(
+	outputPath string,
+	config *config.Config,
+) {
+	for serviceName := range config.Services {
+		packageName := strings.ToLower(serviceName)
+		config.CurrentPackage = packageName
+		generateSpecific(
+			outputPath+"/"+packageName+"/service.go",
+			rootTemplatePath+"/service/service.go.tmpl",
+			config,
+		)
+	}
 }
 
 // This method should be general enough to be reused

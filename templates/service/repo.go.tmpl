@@ -1,0 +1,21 @@
+package {{ .CurrentPackage }}
+
+import (
+	"context"
+	"{{ .ModuleName }}/db/postgres/dbgen"
+	"{{ .ModuleName }}/util"
+
+	"github.com/jmoiron/sqlx"
+)
+
+type Repository struct {
+	db    *sqlx.DB
+	query *dbgen.Queries
+}
+
+func NewRepo(db *sqlx.DB) Repository {
+	return Repository{
+		db:    db,
+		query: dbgen.New(db),
+	}
+}

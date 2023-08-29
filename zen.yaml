@@ -61,11 +61,12 @@ api:
     /auth/signin:
       post:
         summary: Sign in
-        operationId: signIn
+        security: BearerAuth
+        service: Auth
+        operationId: SignIn
         requestBody: SignInRequest
         successResponse: 200
         responseBody: AuthResponse
-        security: BearerAuth
 
   schemas:
     SignInRequest:
@@ -79,6 +80,6 @@ api:
           type: string
 
 services:
-  auth:
+  Auth:
     database: postgres
     model: users
