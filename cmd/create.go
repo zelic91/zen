@@ -159,13 +159,13 @@ func generateDatabases(
 	config *config.Config,
 ) {
 	for _, db := range config.Databases {
-		if db.IsPostgres() {
+		if db.Type == "postgres" {
 			generateGeneric(
 				outputPath+"/db/postgres",
 				rootTemplatePath+"/db/postgres",
 				config,
 			)
-		} else {
+		} else if db.Type == "mongo" {
 			generateGeneric(
 				outputPath+"/db/mongo",
 				rootTemplatePath+"/db/mongo",

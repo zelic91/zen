@@ -20,7 +20,7 @@ commands:
     type: worker
 
 databases:
-  - name: postgres
+  postgres:
     type: postgres
     models:
       - name: users
@@ -37,7 +37,7 @@ databases:
           - name: status
             type: string
 
-  - name: mongo
+  mongo:
     type: mongo
     models:
       - name: users
@@ -79,5 +79,5 @@ api:
           type: string
 
 services:
-  - name: admin
+  - name: auth
     database: postgres

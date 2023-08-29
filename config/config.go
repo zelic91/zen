@@ -6,7 +6,7 @@ type Config struct {
 	ModuleName  string `yaml:"moduleName"`
 	Api         Api
 	Commands    []Command
-	Databases   []Database
+	Databases   map[string]Database
 	Services    []Service
 	Env         []Env
 }
@@ -17,13 +17,8 @@ type Command struct {
 }
 
 type Database struct {
-	Name   string
 	Type   string
 	Models []Model
-}
-
-func (d *Database) IsPostgres() bool {
-	return d.Name == "postgres"
 }
 
 type Model struct {
