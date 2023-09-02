@@ -19,11 +19,11 @@ apigen:
 	oapi-codegen -package gen api/openapi.yaml > api/gen/spec.gen.go
 
 dbgen_mongo:
-{{- range .Databases }}
+{{- range $databaseName, $database := .Databases }}
     {{- if eq .Type "mongo" }}
-        {{- range .Models }}
-	repogen -pkg=db/mongo -dest=db/mongo/{{ .Name | singularize }}_repo.go \
-			-model={{ .Name | singularize | title }} -repo={{ .Name | singularize | title }}Repo
+        {{- range $modelName, $model := .Models }}
+	repogen -pkg=db/mongo -dest=db/mongo/{{ $modelName | singularize }}_repo.go \
+			-model={{ $modelName | singularize | title }} -repo={{ $modelName | singularize | title }}Repo
 		{{- end }}
 	{{- end }}
 {{- end }}

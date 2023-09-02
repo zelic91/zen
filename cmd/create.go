@@ -211,6 +211,7 @@ func generateServices(
 	for serviceName := range config.Services {
 		packageName := strings.ToLower(serviceName)
 		config.CurrentPackage = packageName
+
 		generateSpecific(
 			outputPath+"/"+packageName+"/service.go",
 			rootTemplatePath+"/service/service.go.tmpl",
