@@ -14,16 +14,33 @@ func FuncMap() template.FuncMap {
 }
 
 func pluralize(input string) string {
-	if strings.HasSuffix(input, "s") {
+	if strings.HasSuffix(input, "s") || strings.HasSuffix(input, "ies") || strings.HasSuffix(input, "es") {
 		return input
+	}
+
+	if strings.HasSuffix(input, "y") {
+		return input + "ies"
+	}
+
+	if strings.HasSuffix(input, "ss") {
+		return input + "es"
 	}
 	return input + "s"
 }
 
 func singularize(input string) string {
-	if !strings.HasSuffix(input, "s") {
+	if !strings.HasSuffix(input, "s") && !strings.HasSuffix(input, "ies") && !strings.HasSuffix(input, "sses") {
 		return input
 	}
+
+	if strings.HasSuffix(input, "sses") {
+		return strings.TrimSuffix(input, "es")
+	}
+
+	if strings.HasSuffix(input, "ies") {
+		return strings.TrimSuffix(input, "ies") + "y"
+	}
+
 	return strings.TrimSuffix(input, "s")
 }
 
