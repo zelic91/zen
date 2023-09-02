@@ -61,12 +61,22 @@ api:
     /auth/signin:
       post:
         summary: Sign in
-        security: BearerAuth
+        security: ApiKeyAuth
         service: Auth
         operationId: SignIn
         requestBody: SignInRequest
         successResponse: 200
         responseBody: AuthResponse
+
+    /devices:
+      post:
+        summary: Register new device token
+        security: BearerAuth
+        service: Device
+        operationId: CreateDevice
+        requestBody: CreateDevice
+        successResponse: 201
+        responseBody: DefaultResponse
 
   schemas:
     SignInRequest:
@@ -79,7 +89,21 @@ api:
         password:
           type: string
 
+    CreateDevice:
+      required:
+        - deviceToken
+        - platform
+      properties:
+        deviceToken:
+          type: string
+        platform:
+          type: string
+
 services:
   Auth:
     database: postgres
     model: users
+
+  Device:
+    database: postgres
+    model: devices

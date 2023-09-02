@@ -16,7 +16,7 @@ import (
 	"github.com/Masterminds/sprig"
 	"github.com/spf13/cobra"
 	"github.com/zelic91/zen/common"
-	"github.com/zelic91/zen/config"
+	c "github.com/zelic91/zen/config"
 	"github.com/zelic91/zen/funcs"
 	"gopkg.in/yaml.v3"
 )
@@ -86,13 +86,13 @@ func makeTargetPath(outputDir string) error {
 	return nil
 }
 
-func readConfig(configFile string) *config.Config {
+func readConfig(configFile string) *c.Config {
 	yamlFile, err := os.ReadFile(configFile)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var config config.Config
+	var config c.Config
 	err = yaml.Unmarshal(yamlFile, &config)
 
 	if err != nil {
@@ -105,7 +105,7 @@ func readConfig(configFile string) *config.Config {
 // Generate the root files such as Makefile or sample env
 func generateRootFiles(
 	outputPath string,
-	config *config.Config,
+	config *c.Config,
 ) {
 	generateGeneric(
 		outputPath,
@@ -116,7 +116,7 @@ func generateRootFiles(
 
 func generateConfig(
 	outputPath string,
-	config *config.Config,
+	config *c.Config,
 ) {
 	generateGeneric(
 		outputPath+"/config",
@@ -127,7 +127,7 @@ func generateConfig(
 
 func generateCommon(
 	outputPath string,
-	config *config.Config,
+	config *c.Config,
 ) {
 	generateGeneric(
 		outputPath+"/common",
@@ -138,7 +138,7 @@ func generateCommon(
 
 func generateCommands(
 	outputPath string,
-	config *config.Config,
+	config *c.Config,
 ) {
 	generateSpecific(
 		outputPath+"/cmd/root.go",
@@ -157,7 +157,7 @@ func generateCommands(
 
 func generateDatabases(
 	outputPath string,
-	config *config.Config,
+	config *c.Config,
 ) {
 	for _, db := range config.Databases {
 		if db.Type == "postgres" {
@@ -178,8 +178,25 @@ func generateDatabases(
 
 func generateApi(
 	outputPath string,
-	config *config.Config,
+	config *c.Config,
 ) {
+	serviceOperationMap := map[string][]c.ApiPath{}
+
+	for _, path := range config.Api.Paths {
+		for _, apiPath := range path {
+			serviceName := apiPath.Service
+			l := serviceOperationMap[serviceName]
+			if l == nil {
+				l = []c.ApiPath{apiPath}
+			} else {
+				l = append(l, apiPath)
+			}
+			serviceOperationMap[serviceName] = l
+		}
+	}
+
+	config.ServiceOperationMap = serviceOperationMap
+
 	generateGeneric(
 		outputPath+"/api",
 		rootTemplatePath+"/api",
@@ -189,7 +206,7 @@ func generateApi(
 
 func generateServices(
 	outputPath string,
-	config *config.Config,
+	config *c.Config,
 ) {
 	for serviceName := range config.Services {
 		packageName := strings.ToLower(serviceName)
@@ -209,7 +226,7 @@ func generateServices(
 func generateGeneric(
 	outputPath string,
 	inputPath string,
-	config *config.Config,
+	config *c.Config,
 ) {
 	templateMap := map[string]string{}
 	fileList := []string{}
@@ -292,7 +309,7 @@ func generateGeneric(
 func generateSpecific(
 	outputPath string,
 	inputPath string,
-	config *config.Config,
+	config *c.Config,
 ) {
 	templates = template.Must(template.New("zen-template").Funcs(sprig.FuncMap()).Funcs(funcs.FuncMap()).ParseFS(
 		RootFs,

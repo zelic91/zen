@@ -12,7 +12,7 @@ paths:
     {{ $method }}:
       {{- with $value }}
       summary: {{ .Summary }}
-      operationId: {{ .OperationId }}
+      operationId: {{ .OperationID }}
       security:
         - {{ .Security }}: []
       requestBody:

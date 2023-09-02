@@ -1,0 +1,84 @@
+package api
+
+import (
+	"context"
+	"fmt"
+	"{{ .ModuleName }}/api/gen"
+	"{{ .ModuleName }}/common"
+	"net/http"
+
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
+)
+
+{{- range $service, $apiPaths := .ServiceOperationMap}}
+type {{ $service }}Service interface {
+	{{- range $apiPaths }}
+	{{ .OperationID }}(ctx context.Context{{- if eq .Security "BearerAuth"}}, user *common.UserClaims{{- end }}{{- if .RequestBody }}, body *gen.{{ .RequestBody }}{{- end }}) (*gen.{{ .ResponseBody }}, error) 
+	{{- end}}
+}
+{{- end }}
+
+type ApiService struct {
+{{- range $service, $apiPaths := .ServiceOperationMap }}
+	{{ $service }}Service
+{{- end }}
+}
+
+type ServerImpl struct {
+	service ApiService
+}
+
+func NewServerImpl(
+{{- range $service, $apiPaths := .ServiceOperationMap}}
+	{{ $service | lower }}Service {{ $service }}Service,
+{{- end }}
+) ServerImpl {
+	return ServerImpl{
+		service: ApiService{
+{{- range $service, $apiPaths := .ServiceOperationMap}}
+			{{ $service }}Service: {{ $service | lower }}Service,
+{{- end }}
+		},
+	}
+}
+
+{{- range $service, $apiPaths := .ServiceOperationMap }}
+	{{- range $apiPaths }}
+func (s *ServerImpl) {{ .OperationID }}(ctx echo.Context) error {
+	{{- if eq .Security "BearerAuth" }}
+	user := GetUserClaimsFromContext(ctx)
+	{{- end }}
+
+	{{- if .RequestBody }}
+	var body gen.{{ .RequestBody }}
+	err := ctx.Bind(&body)
+
+	if err != nil {
+		log.Error(err)
+		return sendError(ctx, http.StatusBadRequest, 10000, "Invalid request body")
+	}
+	{{- end }}
+
+	resp, err := s.service.{{ .OperationID }}(ctx.Request().Context(){{- if eq .Security "BearerAuth" }}, user{{- end }}{{- if .RequestBody }}, &body{{- end }})
+
+	if err != nil {
+		log.Error(err)
+		return sendError(ctx, http.StatusInternalServerError, 10001, "Failed to {{ .OperationID }}")
+	}
+
+	return ctx.JSON({{ .SuccessResponse }}, resp)
+}
+	{{- end }}
+{{- end }}
+
+func sendError(ctx echo.Context, statusCode int, code int, message string) error {
+	resp := gen.Error{
+		Code:    code,
+		Message: message,
+	}
+
+	err := ctx.JSON(statusCode, resp)
+
+	return err
+}

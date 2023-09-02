@@ -1,15 +1,16 @@
 package config
 
 type Config struct {
-	Title          string
-	Description    string
-	ModuleName     string `yaml:"moduleName"`
-	Api            Api
-	Commands       map[string]Command
-	Databases      map[string]Database
-	Services       map[string]Service
-	Env            map[string]Env
-	CurrentPackage string
+	Title               string
+	Description         string
+	ModuleName          string `yaml:"moduleName"`
+	Api                 Api
+	Commands            map[string]Command
+	Databases           map[string]Database
+	Services            map[string]Service
+	Env                 map[string]Env
+	CurrentPackage      string
+	ServiceOperationMap map[string][]ApiPath
 }
 
 type Command struct {
@@ -65,7 +66,8 @@ type Api struct {
 type ApiPath struct {
 	Method          string
 	Summary         string
-	OperationId     string `yaml:"operationId"`
+	Service         string
+	OperationID     string `yaml:"operationId"`
 	RequestBody     string `yaml:"requestBody"`
 	SuccessResponse int    `yaml:"successResponse"`
 	ResponseBody    string `yaml:"responseBody"`
