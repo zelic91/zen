@@ -144,6 +144,10 @@ func generateCommands(
 	outputPath string,
 	config *c.Config,
 ) {
+
+	config.ServiceDatabaseMap = buildServiceDatabaseMap(config)
+	config.ServiceOperationMap = buildServiceOperationMap(config)
+
 	generateSpecific(
 		outputPath+"/cmd/root.go",
 		rootTemplatePath+"/cmd/root.go.tmpl",
@@ -201,22 +205,7 @@ func generateApi(
 	outputPath string,
 	config *c.Config,
 ) {
-	serviceOperationMap := map[string][]c.ApiPath{}
-
-	for _, path := range config.Api.Paths {
-		for _, apiPath := range path {
-			serviceName := apiPath.Service
-			l := serviceOperationMap[serviceName]
-			if l == nil {
-				l = []c.ApiPath{apiPath}
-			} else {
-				l = append(l, apiPath)
-			}
-			serviceOperationMap[serviceName] = l
-		}
-	}
-
-	config.ServiceOperationMap = serviceOperationMap
+	config.ServiceOperationMap = buildServiceOperationMap(config)
 
 	generateGeneric(
 		outputPath+"/api",
@@ -394,6 +383,25 @@ func generateSpecific(
 	}
 
 	filePath.Write(formatted)
+}
+
+func buildServiceOperationMap(config *c.Config) map[string][]c.ApiPath {
+	ret := map[string][]c.ApiPath{}
+
+	for _, path := range config.Api.Paths {
+		for _, apiPath := range path {
+			serviceName := apiPath.Service
+			l := ret[serviceName]
+			if l == nil {
+				l = []c.ApiPath{apiPath}
+			} else {
+				l = append(l, apiPath)
+			}
+			ret[serviceName] = l
+		}
+	}
+
+	return ret
 }
 
 func buildServiceDatabaseMap(config *c.Config) map[string]c.Database {

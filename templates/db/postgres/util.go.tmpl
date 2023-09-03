@@ -1,6 +1,14 @@
 package postgres 
 
-import "database/sql"
+import (
+	"database/sql"
+	"{{ .ModuleName }}/config"
+	"github.com/jmoiron/sqlx"
+)
+
+func InitDatabase(config *config.Config) *sqlx.DB {
+	return sqlx.MustOpen("postgres", config.PostgresURL)
+}
 
 func ToNullString(input *string) sql.NullString {
 	if input == nil {

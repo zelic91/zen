@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"{{ .ModuleName }}/api"
 	"{{ .ModuleName }}/api/gen"
+	"{{ .ModuleName }}/config"
+	"{{ .ModuleName }}/db/postgres"
+	"{{ .ModuleName }}/db/mongo"
 {{- range $serviceName, $service := .Services }}
 	"{{ $.ModuleName }}/{{ $serviceName | snakecase }}"
 {{- end }}
@@ -34,7 +37,8 @@ func init() {
 func RunCommand(cmd *cobra.Command, args []string) {
 
 	config := config.InitConfig()
-	db := initDatabase(config)
+	postgresDB := postgres.InitDatabase(config)
+	mongoDB := mongo.InitMongo(config)
 
 	e := echo.New()
 	g := e.Group("/api/v1")
@@ -57,25 +61,29 @@ func RunCommand(cmd *cobra.Command, args []string) {
 	g.Use(authMiddleware...)
 	g.Use(middleware.Logger())
 
-	userRepo := users.NewRepo(db)
-	deviceRepo := devices.NewRepo(db)
-	categoryRepo := categories.NewRepo(db)
-	objectRepo := objects.NewRepo(db)
+{{- range $serviceName, $database := .ServiceDatabaseMap }}
+	{{- if eq .Type "postgres" }}
+	{{ $serviceName | untitle }}Repo := {{ $serviceName | untitle }}.NewRepo(postgresDB)
+	{{- else if eq .Type "mongo" }}
+		{{- with index $.Services $serviceName }}
+	{{ $serviceName | untitle }}Collection := mongoDB.Database(config.MongoDatabase).Collection("{{ .Model }}")
+	{{ $serviceName | untitle }}Repo := {{ $serviceName | untitle }}.NewRepo({{ $serviceName | untitle }}Collection)
+		{{- end }}
+	{{- end }}
+{{- end }}
 
-	userService := users.NewService(&userRepo)
-	authService := auth.NewService(authenticator, userService)
-	opsService := ops.NewService()
-	deviceService := devices.NewService(&deviceRepo)
-	categoryService := categories.NewService(&categoryRepo)
-	objectService := objects.NewService(&objectRepo)
+{{- range $serviceName, $service := .Services }}
+	{{- if eq .Type "auth" }}
+	{{ $serviceName | untitle }}Service := {{ $serviceName | untitle }}.NewService(authenticator,{{- range .Services }} {{ . | untitle }}Service, {{- end }})
+	{{- else }}
+	{{ $serviceName | untitle }}Service := {{ $serviceName | untitle }}.NewService(&{{ $serviceName | untitle }}Repo)
+	{{- end }}
+{{- end }}
 
 	serverImpl := api.NewServerImpl(
-		authService,
-		userService,
-		opsService,
-		deviceService,
-		categoryService,
-		objectService,
+		{{- range $serviceName, $operation := .ServiceOperationMap }}
+		{{ $serviceName | untitle }}Service,
+		{{- end }}
 	)
 
 	gen.RegisterHandlersWithBaseURL(e, &serverImpl, "api/v1")

@@ -7,8 +7,14 @@ env:
     type: string
   PORT:
     type: int
-  DATABASE_URL:
-    structName: DatabaseURL
+  POSTGRES_URL:
+    structName: PostgresURL
+    type: string
+  MONGO_URL:
+    structName: MongoURL
+    type: string
+  MONGO_DATABASE:
+    structName: MongoDatabase
     type: string
 
 commands:
