@@ -37,12 +37,12 @@ func (r Repo) FindAll(
 func (r Repo) Create(
 	ctx context.Context,
 {{- range $propertyName, $property := .CurrentModel.Properties }}
-	{{ $propertyName }} {{ .Type }},
+	{{ $propertyName | camelcase | untitle }} {{ .Type }},
 {{- end }}
 ) (*dbgen.{{ .CurrentModelName | singularize | title }}, error) {
 	params := dbgen.Create{{ .CurrentModelName | singularize | title }}Params{
 	{{- range $propertyName, $property := .CurrentModel.Properties }}
-		{{ $propertyName | title }}: {{ $propertyName }},
+		{{ $propertyName | camelcase | title }}: {{ $propertyName | camelcase | untitle }},
 	{{- end }}
 	}
 

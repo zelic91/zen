@@ -117,3 +117,9 @@ services:
     model: devices
     methods:
       - FindByDeviceToken
+
+  Device2:
+    database: mongo
+    model: devices
+    methods:
+      - FindByDeviceToken
