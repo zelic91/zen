@@ -57,8 +57,12 @@ UPDATE {{ $modelName }}
 SET 
     first_name = $2,
     last_name = $3,
-    status = $4,
-    updated_by = $5,
+    username = $4,
+    email = $5,
+    password_hashed = $6,
+    password_salt = $7,
+    status = $8,
+    updated_by = $9,
     updated_at = NOW()
 WHERE id = $1
 RETURNING *;

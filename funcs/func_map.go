@@ -3,13 +3,16 @@ package funcs
 import (
 	"html/template"
 	"strings"
+
+	"github.com/zelic91/zen/config"
 )
 
 func FuncMap() template.FuncMap {
 	return map[string]interface{}{
-		"pluralize":   Pluralize,
-		"singularize": Singularize,
-		"loop":        Loop,
+		"pluralize":      Pluralize,
+		"singularize":    Singularize,
+		"userProperties": UserProperties,
+		"loop":           Loop,
 	}
 }
 
@@ -42,6 +45,18 @@ func Singularize(input string) string {
 	}
 
 	return strings.TrimSuffix(input, "s")
+}
+
+func UserProperties() map[string]config.ModelProperty {
+	return map[string]config.ModelProperty{
+		"first_name":      {Type: "string"},
+		"last_name":       {Type: "string"},
+		"username":        {Type: "string", NotNull: true},
+		"email":           {Type: "string"},
+		"password_hashed": {Type: "string"},
+		"password_salt":   {Type: "string"},
+		"status":          {Type: "string"},
+	}
 }
 
 func Loop(start int64, length int64) []int64 {

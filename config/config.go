@@ -31,11 +31,10 @@ type Model struct {
 	Name       string
 	Type       string
 	Owner      string
-	Properties map[string]ModelProperties
+	Properties map[string]ModelProperty
 }
 
-type ModelProperties struct {
-	Name       string
+type ModelProperty struct {
 	Type       string
 	Owner      string
 	NotNull    bool `yaml:"notNull"`
@@ -50,9 +49,11 @@ type ModelReference struct {
 }
 
 type Service struct {
+	Type     string
 	Database string
 	Model    string
 	Methods  []string
+	Services []string
 }
 
 type Env struct {

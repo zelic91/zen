@@ -2,9 +2,9 @@ package {{ .CurrentPackage }}
 
 import (
 	"context"
+	"{{ .ModuleName }}/db/postgres"
 	"{{ .ModuleName }}/db/postgres/dbgen"
-	"{{ .ModuleName }}/util"
-
+	
 	"github.com/jmoiron/sqlx"
 )
 
@@ -27,24 +27,68 @@ func (r Repo) FindAll(
 	offset int,
 ) ([]*dbgen.{{ .CurrentModelName | singularize | title }}, error) {
 	params := dbgen.List{{ .CurrentModelName | title }}Params{
-		Column1: util.ToNullString(&search),
+		Column1: postgres.ToNullString(&search),
 		Limit:   int32(limit),
 		Offset:  int32(offset),
 	}
 	return r.query.List{{ .CurrentModelName | title }}(ctx, params)
 }
 
+func (r Repo) FindByID(
+	ctx context.Context,
+	id int64,
+) (*dbgen.{{ .CurrentModelName | singularize | title }}, error) {
+	return r.query.Get{{ .CurrentModelName | singularize | title }}ById(ctx, id)
+}
+
 func (r Repo) Create(
 	ctx context.Context,
+{{- if eq .CurrentModel.Type "user" }}
+	{{- range $propertyName, $property := userProperties }}
+	{{ $propertyName | camelcase | untitle }} {{- if .NotNull }} {{ .Type }}{{- else }} *{{ .Type }}{{- end }},
+	{{- end }}
+{{- end }}
 {{- range $propertyName, $property := .CurrentModel.Properties }}
 	{{ $propertyName | camelcase | untitle }} {{ .Type }},
 {{- end }}
 ) (*dbgen.{{ .CurrentModelName | singularize | title }}, error) {
 	params := dbgen.Create{{ .CurrentModelName | singularize | title }}Params{
+	{{- if eq .CurrentModel.Type "user" }}
+		{{- range $propertyName, $property := userProperties }}
+		{{ $propertyName | camelcase | title }}: {{- if $property.NotNull}}{{ $propertyName | camelcase | untitle }}{{- else }}postgres.ToNullString({{ $propertyName | camelcase | untitle }}){{- end }},
+		{{- end }}
+	{{- end }}
 	{{- range $propertyName, $property := .CurrentModel.Properties }}
-		{{ $propertyName | camelcase | title }}: {{ $propertyName | camelcase | untitle }},
+		{{ $propertyName | camelcase | title }}: {{- if $property.NotNull}}{{ $propertyName | camelcase | untitle }}{{- else }}postgres.ToNullString({{ $propertyName | camelcase | untitle }}){{- end }},
 	{{- end }}
 	}
 
 	return r.query.Create{{ .CurrentModelName | singularize | title }}(ctx, params)
+}
+
+func (r Repo) Update(
+	ctx context.Context,
+	id int64,
+{{- if eq .CurrentModel.Type "user" }}
+	{{- range $propertyName, $property := userProperties }}
+	{{ $propertyName | camelcase | untitle }} {{- if .NotNull }} {{ .Type }}{{- else }} *{{ .Type }}{{- end }},
+	{{- end }}
+{{- end }}
+{{- range $propertyName, $property := .CurrentModel.Properties }}
+	{{ $propertyName | camelcase | untitle }} {{ .Type }},
+{{- end }}
+) (*dbgen.{{ .CurrentModelName | singularize | title }}, error) {
+	params := dbgen.Update{{ .CurrentModelName | singularize | title }}Params{
+	ID: id,
+	{{- if eq .CurrentModel.Type "user" }}
+		{{- range $propertyName, $property := userProperties }}
+		{{ $propertyName | camelcase | title }}: {{- if $property.NotNull}}{{ $propertyName | camelcase | untitle }}{{- else }}postgres.ToNullString({{ $propertyName | camelcase | untitle }}){{- end }},
+		{{- end }}
+	{{- end }}
+	{{- range $propertyName, $property := .CurrentModel.Properties }}
+		{{ $propertyName | camelcase | title }}: {{- if $property.NotNull}}{{ $propertyName | camelcase | untitle }}{{- else }}postgres.ToNullString({{ $propertyName | camelcase | untitle }}){{- end }},
+	{{- end }}
+	}
+
+	return r.query.Update{{ .CurrentModelName | singularize | title }}(ctx, params)
 }

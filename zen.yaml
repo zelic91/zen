@@ -100,11 +100,16 @@ api:
           type: string
 
 services:
-  Auth:
+  User:
     database: postgres
     model: users
     methods:
       - FindByUsername
+
+  Auth:
+    type: auth
+    services:
+      - User
 
   Auth2:
     database: mongo
