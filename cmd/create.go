@@ -182,6 +182,13 @@ func generateDatabases(
 		} else if db.Type == "mongo" {
 
 			serviceDatabaseMap := buildServiceDatabaseMap(config)
+
+			generateSpecific(
+				outputPath+"/db/mongo/util.go",
+				rootTemplatePath+"/db/mongo/util.go.tmpl",
+				config,
+			)
+
 			for serviceName, database := range serviceDatabaseMap {
 				if database.Type != "mongo" {
 					continue
