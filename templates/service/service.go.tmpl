@@ -1,11 +1,47 @@
 package {{ .CurrentPackage }}
 
+import (
+	"context"
+	"errors"
+	"fmt"
+	"{{ .ModuleName }}/api/gen"
+	"{{ .ModuleName }}/common"
+	"{{ .ModuleName }}/db/postgres/dbgen"
+	"{{ .ModuleName }}/users"
+
+	"github.com/lestrrat-go/jwx/jwt"
+)
+
+{{- if eq .CurrentService.Type "auth" }}
+type JWSValidator interface {
+	ValidateJWS(jws string) (jwt.Token, error)
+	GenerateJWS(info interface{}, permissions interface{}) (string, error)
+}
+{{- end }}
+
 type service struct {
+{{- if eq .CurrentService.Type "auth" }}
+	authenticator JWSValidator
+{{- else }}
 	repo *Repo
+{{- end }}
+{{- range .CurrentService.Services }}
+	{{ . | untitle }}Service {{ . }}Service
+{{- end }}
 }
 
-func NewService(repo *Repo) *service {
+func NewService(
+{{- if eq .CurrentService.Type "auth" }}
+	authenticator JWSValidator,
+{{- else }}
+	repo *Repo,
+{{- end }}
+) *service {
 	return &service{
+	{{- if eq .CurrentService.Type "auth" }}
+		authenticator: authenticator,
+	{{- else }}
 		repo: repo,
+	{{- end }}
 	}
 }

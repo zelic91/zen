@@ -13,6 +13,7 @@ type Config struct {
 	CurrentModelName    string
 	CurrentModel        Model
 	CurrentCommand      string
+	CurrentService      Service
 	ServiceOperationMap map[string][]ApiPath
 	ServiceDatabaseMap  map[string]Database
 }

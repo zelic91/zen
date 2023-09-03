@@ -243,6 +243,7 @@ func generateServices(
 			)
 		}
 
+		config.CurrentService = service
 		generateSpecific(
 			outputPath+"/"+packageName+"/service.go",
 			rootTemplatePath+"/service/service.go.tmpl",
