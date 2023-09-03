@@ -1,0 +1,50 @@
+package {{ .CurrentPackage }}
+
+import (
+	"context"
+	"{{ .ModuleName }}/db/postgres/dbgen"
+	"{{ .ModuleName }}/util"
+
+	"github.com/jmoiron/sqlx"
+)
+
+type Repo struct {
+	db    *sqlx.DB
+	query *dbgen.Queries
+}
+
+func NewRepo(db *sqlx.DB) Repo {
+	return Repo{
+		db:    db,
+		query: dbgen.New(db),
+	}
+}
+
+func (r Repo) FindAll(
+	ctx context.Context,
+	search string,
+	limit int,
+	offset int,
+) ([]*dbgen.{{ .CurrentModelName | singularize | title }}, error) {
+	params := dbgen.List{{ .CurrentModelName | title }}Params{
+		Column1: util.ToNullString(&search),
+		Limit:   int32(limit),
+		Offset:  int32(offset),
+	}
+	return r.query.List{{ .CurrentModelName | title }}(ctx, params)
+}
+
+func (r Repo) Create(
+	ctx context.Context,
+{{- range $propertyName, $property := .CurrentModel.Properties }}
+	{{ $propertyName }} {{ .Type }},
+{{- end }}
+) (*dbgen.{{ .CurrentModelName | singularize | title }}, error) {
+	params := dbgen.Create{{ .CurrentModelName | singularize | title }}Params{
+	{{- range $propertyName, $property := .CurrentModel.Properties }}
+		{{ $propertyName | title }}: {{ $propertyName }},
+	{{- end }}
+	}
+
+	return r.query.Create{{ .CurrentModelName | singularize | title }}(ctx, params)
+}

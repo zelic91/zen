@@ -103,7 +103,17 @@ services:
   Auth:
     database: postgres
     model: users
+    methods:
+      - FindByUsername
+
+  Auth2:
+    database: mongo
+    model: users
+    methods:
+      - FindByUsername
 
   Device:
     database: postgres
     model: devices
+    methods:
+      - FindByDeviceToken

@@ -10,7 +10,10 @@ type Config struct {
 	Services            map[string]Service
 	Env                 map[string]Env
 	CurrentPackage      string
+	CurrentModelName    string
+	CurrentModel        Model
 	ServiceOperationMap map[string][]ApiPath
+	ServiceDatabaseMap  map[string]Database
 }
 
 type Command struct {
@@ -48,6 +51,7 @@ type ModelReference struct {
 type Service struct {
 	Database string
 	Model    string
+	Methods  []string
 }
 
 type Env struct {

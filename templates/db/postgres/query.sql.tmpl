@@ -9,9 +9,16 @@
 SELECT * FROM {{ $modelName }}
 WHERE id = $1 LIMIT 1;
 
--- name: List{{ $modelName | title }} :many
+-- name: ListAll{{ $modelName | title }} :many
 SELECT * FROM {{ $modelName }}
 ORDER BY created_at;
+
+-- name: List{{ $modelName | title }} :many
+SELECT * FROM {{ $modelName }}
+WHERE title LIKE '%' || $1 || '%'
+ORDER BY created_at
+LIMIT $2
+OFFSET $3;
 
 -- name: Create{{ $modelName | singularize | title }} :one
 INSERT INTO {{ $modelName }} (
@@ -67,9 +74,16 @@ WHERE id = $1;
 SELECT * FROM {{ $modelName }}
 WHERE id = $1 LIMIT 1;
 
--- name: List{{ $modelName | title }} :many
+-- name: ListAll{{ $modelName | title }} :many
 SELECT * FROM {{ $modelName }}
 ORDER BY created_at;
+
+-- name: List{{ $modelName | title }} :many
+SELECT * FROM {{ $modelName }}
+WHERE title LIKE '%' || $1 || '%'
+ORDER BY created_at
+LIMIT $2
+OFFSET $3;
 
 -- name: Create{{ $modelName | singularize | title }} :one
 INSERT INTO {{ $modelName }} (

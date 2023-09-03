@@ -1,10 +1,10 @@
 package {{ .CurrentPackage }}
 
 type service struct {
-	repo *Repository
+	repo *Repo
 }
 
-func NewService(repo *Repository) *service {
+func NewService(repo *Repo) *service {
 	return &service{
 		repo: repo,
 	}

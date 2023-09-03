@@ -1,4 +1,4 @@
-package mongo
+package {{ .CurrentPackage }}
 
 import (
 	"context"
@@ -7,25 +7,23 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-{{- range .Databases }}
-    {{- if eq .Type "mongo" }}
-        {{range $modelName, $model := .Models }}
+{{- with .CurrentModel }}
 
-// {{ $modelName | title }}
-type {{ $modelName | singularize | title }}Repo interface {
-	InsertOne(ctx context.Context, model *{{ $modelName | singularize | title }}) (interface{}, error)
-	FindByID(ctx context.Context, id primitive.ObjectID) (*{{ $modelName | singularize | title }}, error)
-	FindAll(ctx context.Context) ([]*{{ $modelName | singularize | title }}, error)
-	UpdateByID(ctx context.Context, model *{{ $modelName | singularize | title }}, id primitive.ObjectID) (bool, error)
+// {{ $.CurrentModelName | title }}
+type Repo interface {
+	InsertOne(ctx context.Context, model *{{ $.CurrentModelName | singularize | title }}) (interface{}, error)
+	FindByID(ctx context.Context, id primitive.ObjectID) (*{{ $.CurrentModelName | singularize | title }}, error)
+	FindAll(ctx context.Context) ([]*{{ $.CurrentModelName | singularize | title }}, error)
+	UpdateByID(ctx context.Context, model *{{ $.CurrentModelName | singularize | title }}, id primitive.ObjectID) (bool, error)
 	DeleteByID(ctx context.Context, id primitive.ObjectID) (bool, error)
 	DeleteAll(ctx context.Context) (int, error)
 {{- if eq .Type "user" }}
-	FindByUsername(ctx context.Context, username string) (*{{ $modelName | singularize | title }}, error)
-	FindByEmail(ctx context.Context, email string) (*{{ $modelName | singularize | title }}, error)
+	FindByUsername(ctx context.Context, username string) (*{{ $.CurrentModelName | singularize | title }}, error)
+	FindByEmail(ctx context.Context, email string) (*{{ $.CurrentModelName | singularize | title }}, error)
 {{- end }}
 }
 
-type {{ $modelName | singularize | title }} struct {
+type {{ $.CurrentModelName | singularize | title }} struct {
 	ID        primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 {{- if eq .Type "user" }}
 	FirstName      string             `json:"first_name" bson:"first_name"`
@@ -37,7 +35,7 @@ type {{ $modelName | singularize | title }} struct {
 	Status         string             `json:"status" bson:"status"`
 {{- end }}
 {{- range $propertyName, $property := .Properties }}
-	{{ $propertyName | camelcase }}    {{ .Type }}             `json:"{{ $modelName | lower }}" bson:"{{ $modelName | lower }}"`
+	{{ $propertyName | camelcase }}    {{ .Type }}             `json:"{{ $propertyName | lower }}" bson:"{{ $propertyName | lower }}"`
 {{- end }}
 	CreatedBy primitive.ObjectID `json:"created_by" bson:"created_by"`
 	UpdatedBy primitive.ObjectID `json:"updated_by" bson:"updated_by"`
@@ -47,8 +45,6 @@ type {{ $modelName | singularize | title }} struct {
 	DeletedAt time.Time          `json:"deleted_at" bson:"deleted_at"`
 }
 
-
-		{{- end }}
-	{{- end }}
 {{- end }}
+
 

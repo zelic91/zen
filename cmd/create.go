@@ -107,6 +107,9 @@ func generateRootFiles(
 	outputPath string,
 	config *c.Config,
 ) {
+
+	config.ServiceDatabaseMap = buildServiceDatabaseMap(config)
+
 	generateGeneric(
 		outputPath,
 		rootTemplatePath+"/root",
@@ -167,11 +170,23 @@ func generateDatabases(
 				config,
 			)
 		} else if db.Type == "mongo" {
-			generateGeneric(
-				outputPath+"/db/mongo",
-				rootTemplatePath+"/db/mongo",
-				config,
-			)
+
+			serviceDatabaseMap := buildServiceDatabaseMap(config)
+			for serviceName, database := range serviceDatabaseMap {
+				if database.Type != "mongo" {
+					continue
+				}
+				packageName := strings.ToLower(serviceName)
+				config.CurrentPackage = packageName
+				config.CurrentModelName = config.Services[serviceName].Model
+				config.CurrentModel = database.Models[config.CurrentModelName]
+				generateSpecific(
+					outputPath+"/"+strings.ToLower(packageName)+"/model.go",
+					rootTemplatePath+"/db/mongo/model.go.tmpl",
+					config,
+				)
+			}
+
 		}
 	}
 }
@@ -208,9 +223,23 @@ func generateServices(
 	outputPath string,
 	config *c.Config,
 ) {
-	for serviceName := range config.Services {
+	serviceDatabaseMap := buildServiceDatabaseMap(config)
+	for serviceName, service := range config.Services {
 		packageName := strings.ToLower(serviceName)
 		config.CurrentPackage = packageName
+
+		database := serviceDatabaseMap[serviceName]
+
+		config.CurrentModelName = service.Model
+		config.CurrentModel = database.Models[config.CurrentModelName]
+
+		if database.Type == "postgres" {
+			generateSpecific(
+				outputPath+"/"+packageName+"/repo.go",
+				rootTemplatePath+"/service/repo.postgres.go.tmpl",
+				config,
+			)
+		}
 
 		generateSpecific(
 			outputPath+"/"+packageName+"/service.go",
@@ -359,4 +388,12 @@ func generateSpecific(
 	}
 
 	filePath.Write(formatted)
+}
+
+func buildServiceDatabaseMap(config *c.Config) map[string]c.Database {
+	ret := map[string]c.Database{}
+	for serviceName, service := range config.Services {
+		ret[serviceName] = config.Databases[service.Database]
+	}
+	return ret
 }
