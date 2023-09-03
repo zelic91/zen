@@ -12,6 +12,7 @@ type Config struct {
 	CurrentPackage      string
 	CurrentModelName    string
 	CurrentModel        Model
+	CurrentCommand      string
 	ServiceOperationMap map[string][]ApiPath
 	ServiceDatabaseMap  map[string]Database
 }

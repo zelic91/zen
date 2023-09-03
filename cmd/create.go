@@ -66,6 +66,7 @@ func create(configFile string, outputDir string) {
 	// Generate commands
 	generateCommands(outputDir, config)
 
+	// Generate API
 	generateApi(outputDir, config)
 
 	// Generate databases
@@ -149,12 +150,17 @@ func generateCommands(
 		config,
 	)
 
-	for name := range config.Commands {
-		generateSpecific(
-			outputPath+"/cmd/"+name+".go",
-			rootTemplatePath+"/cmd/command.go.tmpl",
-			config,
-		)
+	for name, command := range config.Commands {
+		config.CurrentCommand = name
+		switch command.Type {
+		case "api":
+			generateSpecific(
+				outputPath+"/cmd/"+name+".go",
+				rootTemplatePath+"/cmd/command.api.go.tmpl",
+				config,
+			)
+		default:
+		}
 	}
 }
 

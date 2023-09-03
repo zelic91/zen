@@ -5,12 +5,9 @@ import (
 	"fmt"
 	"{{ .ModuleName }}/api"
 	"{{ .ModuleName }}/api/gen"
-	"{{ .ModuleName }}/auth"
-	"{{ .ModuleName }}/categories"
-	"{{ .ModuleName }}/devices"
-	"{{ .ModuleName }}/objects"
-	"{{ .ModuleName }}/ops"
-	"{{ .ModuleName }}/users"
+{{- range $serviceName, $service := .Services }}
+	"{{ $.ModuleName }}/{{ $serviceName | snakecase }}"
+{{- end }}
 	"log"
 	"net/http"
 	"os"
@@ -23,15 +20,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var serverCmd = &cobra.Command{
-	Use:   "serve",
-	Short: "Start HTTP server",
-	Long:  `Start HTTP server`,
+var {{ .CurrentCommand }}Cmd = &cobra.Command{
+	Use:   "{{ .CurrentCommand }}",
+	Short: "Start API server",
+	Long:  `Start API server`,
 	Run:   RunCommand,
 }
 
 func init() {
-	rootCmd.AddCommand(serverCmd)
+	rootCmd.AddCommand({{ .CurrentCommand }}Cmd)
 }
 
 func RunCommand(cmd *cobra.Command, args []string) {

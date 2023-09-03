@@ -1,8 +1,8 @@
 init:
-	go mod init {{ .ModuleName }}
+	go mod tidy
 	go get -u github.com/spf13/cobra@latest
 	go get -u github.com/spf13/viper
-	mv env.sample .env
+	mv env.example .env
 	mv gitignore .gitignore
 
 dep:
@@ -32,15 +32,13 @@ dbgen_postgres:
 	rm -rf db/postgres/dbgen
 	sqlc -f db/postgres/sqlc.config.yaml generate
 
-dbgen:
-	rm -rf db/postgres/dbgen
-	sqlc -f db/postgres/sqlc.config.yaml generate
-
-genall: migrate prepdev apigen dbgen
+gen: apigen dbgen_mongo dbgen_postgres
 	go mod tidy
 
-dev:
-	go run main.go serve
+{{- range $commandName, $command := .Commands }}
+{{ $commandName }}:
+	go run main.go {{ $commandName }}
+{{- end }}
 
 docker:
 	docker image rm {{ .ModuleName }} & \
@@ -51,4 +49,4 @@ docker:
 		--name {{ .ModuleName }} {{ .ModuleName }}
 
 
-.PHONY: init dev prepdev apigen dbgen toolsup toolsdown
+.PHONY: init dev prepdev apigen toolsup toolsdown gen docker dbgen_mongo dbgen_postgres
