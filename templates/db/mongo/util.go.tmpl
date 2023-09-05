@@ -1,15 +1,18 @@
 package mongo
 
 import (
-    "go.mongodb.org/mongo-driver/mongo"
+	"context"
+	"log"
+	"{{ .ModuleName }}/config"
+
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func InitMongo(config *config.Config) *mongo.Client {
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(config.MongoURL))
 	if err != nil {
-		fmt.Printf("err connecting to Mongo: %v", err)
-		os.Exit(1)
+		log.Fatalf("err connecting to Mongo: %v", err)
 	}
 	return client
 }
