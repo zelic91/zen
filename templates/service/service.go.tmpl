@@ -7,9 +7,12 @@ import (
 	"{{ .ModuleName }}/api/gen"
 	"{{ .ModuleName }}/common"
 	"{{ .ModuleName }}/db/postgres/dbgen"
-	"{{ .ModuleName }}/users"
-
+{{- range $depServiceName, $methods := .CurrentService.Services }}
+	"{{ $.ModuleName }}/{{ $depServiceName | untitle }}"
+{{- end }}
+{{- if eq .CurrentService.Type "auth" }}
 	"github.com/lestrrat-go/jwx/jwt"
+{{- end }}
 )
 
 {{- if eq .CurrentService.Type "auth" }}
@@ -19,14 +22,22 @@ type JWSValidator interface {
 }
 {{- end }}
 
+{{- range $depServiceName, $methods := .CurrentService.Services }}
+type {{ $depServiceName }}Service interface {
+	{{- range $methods }}
+	{{ . }}()
+	{{- end }}
+}
+{{- end }}
+
 type service struct {
 {{- if eq .CurrentService.Type "auth" }}
 	authenticator JWSValidator
 {{- else }}
 	repo *Repo
 {{- end }}
-{{- range .CurrentService.Services }}
-	{{ . | untitle }}Service {{ . }}Service
+{{- range $depServiceName, $methods := .CurrentService.Services }}
+	{{ $depServiceName | untitle }}Service {{ $depServiceName }}Service
 {{- end }}
 }
 
@@ -45,3 +56,9 @@ func NewService(
 	{{- end }}
 	}
 }
+
+{{- range .CurrentService.Methods }}
+func (s *service) {{ . }} {
+
+}
+{{- end }}

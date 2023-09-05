@@ -110,27 +110,31 @@ services:
     database: postgres
     model: users
     methods:
-      - FindByUsername
+      - FindByUsername()
 
   Auth:
     type: auth
     services:
-      - User
+      User:
+        - FindByUsername
+    methods:
+      - SignIn(ctx context.Context)
+      - SignUp(ctx context.Context)
 
   Auth2:
     database: mongo
     model: users
     methods:
-      - FindByUsername
+      - FindByUsername()
 
   Device:
     database: postgres
     model: devices
     methods:
-      - FindByDeviceToken
+      - FindByDeviceToken()
 
   Device2:
     database: mongo
     model: devices
     methods:
-      - FindByDeviceToken
+      - FindByDeviceToken()

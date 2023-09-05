@@ -74,9 +74,9 @@ func RunCommand(cmd *cobra.Command, args []string) {
 
 {{- range $serviceName, $service := .Services }}
 	{{- if eq .Type "auth" }}
-	{{ $serviceName | untitle }}Service := {{ $serviceName | untitle }}.NewService(authenticator,{{- range .Services }} {{ . | untitle }}Service, {{- end }})
+	{{ $serviceName | untitle }}Service := {{ $serviceName | untitle }}.NewService(authenticator,{{- range $depServiceName, $depService := .Services }} {{ $depServiceName | untitle }}Service, {{- end }})
 	{{- else }}
-	{{ $serviceName | untitle }}Service := {{ $serviceName | untitle }}.NewService(&{{ $serviceName | untitle }}Repo)
+	{{ $serviceName | untitle }}Service := {{ $serviceName | untitle }}.NewService({{- range $depServiceName, $depService := .Services }} {{ $depServiceName | untitle }}Service, {{- end }}&{{ $serviceName | untitle }}Repo)
 	{{- end }}
 {{- end }}
 

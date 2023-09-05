@@ -54,7 +54,7 @@ type Service struct {
 	Database string
 	Model    string
 	Methods  []string
-	Services []string
+	Services map[string][]string
 }
 
 type Env struct {
