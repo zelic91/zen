@@ -75,7 +75,7 @@ func create(configFile string, outputDir string) {
 	// Generate services
 	generateServices(outputDir, config)
 
-	log.Println("DONE.")
+	log.Println("🍺🍺🍺 DONE.")
 }
 
 func makeTargetPath(outputDir string) error {
@@ -243,6 +243,7 @@ func generateServices(
 			)
 		}
 
+		config.CurrentServiceName = serviceName
 		config.CurrentService = service
 		generateSpecific(
 			outputPath+"/"+packageName+"/service.go",
@@ -377,7 +378,7 @@ func generateSpecific(
 
 	var rendered bytes.Buffer
 	if err := templates.ExecuteTemplate(&rendered, tmpl.Name(), config); err != nil {
-		log.Fatal(err)
+		log.Fatalf("err executing template %v", err)
 	}
 
 	if !strings.Contains(tmpl.Name(), ".go") {
@@ -387,7 +388,8 @@ func generateSpecific(
 
 	formatted, err := format.Source(rendered.Bytes())
 	if err != nil {
-		log.Fatal(err)
+		log.Println(rendered.String())
+		log.Fatalf("err formatting Go source %s %v", tmpl.Name(), err)
 	}
 
 	filePath.Write(formatted)

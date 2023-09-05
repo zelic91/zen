@@ -16,16 +16,54 @@ import (
 )
 
 {{- if eq .CurrentService.Type "auth" }}
+
+var (
+	ErrUserNotExist     = errors.New("user not exist")
+	ErrUserExists       = errors.New("user exists")
+	ErrInvalidPassword  = errors.New("invalid password")
+	ErrPasswordNotMatch = errors.New("password not match")
+	ErrPasswordTooShort = errors.New("password too short")
+)
+
 type JWSValidator interface {
 	ValidateJWS(jws string) (jwt.Token, error)
 	GenerateJWS(info interface{}, permissions interface{}) (string, error)
 }
 {{- end }}
 
+{{- if not (eq .CurrentService.Type "auth") }}
+
+type Create{{ .CurrentModelName | singularize | title }}Params struct {
+	{{- range $propertyName, $property := .CurrentModel.Properties }}
+	{{ $propertyName | camelcase }} {{- if .NotNull }}{{ .Type }}{{- else }}*{{ .Type }}{{- end }}
+	{{- end }}
+	{{- if eq .CurrentModel.Type "user" }}
+		{{- range $propertyName, $property := userProperties }}
+	{{ $propertyName | camelcase }} {{- if .NotNull }} {{ .Type }}{{- else }}*{{ .Type }}{{- end }}
+		{{- end }}
+	{{- end }}
+}
+
+type Update{{ .CurrentModelName | singularize | title }}Params struct {
+	{{- range $propertyName, $property := .CurrentModel.Properties }}
+	{{ $propertyName | camelcase }} {{- if .NotNull }} {{ .Type }}{{- else }}*{{ .Type }}{{- end }}
+	{{- end }}
+	{{- if eq .CurrentModel.Type "user" }}
+		{{- range $propertyName, $property := userProperties }}
+	{{ $propertyName | camelcase }} {{- if .NotNull }} {{ .Type }}{{- else }}*{{ .Type }}{{- end }}
+		{{- end }}
+	{{- end }}
+}
+{{- end }}
+
 {{- range $depServiceName, $methods := .CurrentService.Services }}
 type {{ $depServiceName }}Service interface {
-	{{- range $methods }}
-	{{ . }}()
+	{{- range $methodName := $methods }}
+		{{- with index $.Services $depServiceName }}
+			{{- with index .Methods $methodName }}
+	{{ $methodName }}(ctx context.Context,{{- range .Arguments }}{{ .Name }} {{ .Type }}, {{- end}}) {{- if gt (len .Returns) 0 }}(error){{- else }}error{{- end }}
+			{{- end }}
+		{{- end }}
 	{{- end }}
 }
 {{- end }}
@@ -42,6 +80,9 @@ type service struct {
 }
 
 func NewService(
+{{- range $depServiceName, $methods := .CurrentService.Services }}
+	{{ $depServiceName | untitle }}Service {{ $depServiceName }}Service,
+{{- end }}
 {{- if eq .CurrentService.Type "auth" }}
 	authenticator JWSValidator,
 {{- else }}
@@ -49,6 +90,9 @@ func NewService(
 {{- end }}
 ) *service {
 	return &service{
+	{{- range $depServiceName, $methods := .CurrentService.Services }}
+		{{ $depServiceName | untitle }}Service: {{ $depServiceName | untitle }}Service,
+	{{- end }}
 	{{- if eq .CurrentService.Type "auth" }}
 		authenticator: authenticator,
 	{{- else }}
@@ -57,8 +101,73 @@ func NewService(
 	}
 }
 
-{{- range .CurrentService.Methods }}
-func (s *service) {{ . }} {
+{{- if eq .CurrentService.Type "auth" }}
 
+func (s service) SignUp(ctx context.Context, body *gen.SignUpRequest) (*gen.AuthResponse, error) {
+	if body.Password != body.PasswordConfirmation {
+		return nil, ErrPasswordNotMatch
+	}
+
+	user, err := s.userService.CreateUser(ctx, &user.CreateUserParams{
+		Username:  body.Username,
+		FirstName: body.FirstName,
+		LastName:  body.LastName,
+		Email:     body.Email,
+		Password:  body.Password,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	accessToken, err := s.generateAccessToken(user)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &gen.AuthResponse{
+		AccessToken: accessToken,
+	}, nil
+}
+
+func (s service) SignIn(ctx context.Context, body *gen.SignInRequest) (*gen.AuthResponse, error) {
+	user, err := s.userService.FindUserByUsername(ctx, body.Username)
+	if err != nil {
+		return nil, err
+	}
+
+	if user == nil {
+		return nil, ErrUserNotExist
+	}
+
+	err = util.ValidatePassword(body.Password, user.PasswordSalt.String, user.PasswordHashed.String)
+
+	if err != nil {
+		return nil, ErrInvalidPassword
+	}
+
+	accessToken, err := s.generateAccessToken(user)
+
+	if err != nil {
+		return nil, fmt.Errorf("cannot generate access token: %v", err)
+	}
+
+	return &gen.AuthResponse{
+		AccessToken: accessToken,
+	}, nil
+}
+
+func (s service) generateAccessToken(user *dbgen.User) (string, error) {
+	infoClaim := common.UserClaims{
+		ID: user.ID,
+	}
+	return s.authenticator.GenerateJWS(infoClaim, nil)
+}
+{{- end }}
+
+{{- range $methodName, $method := .CurrentService.Methods }}
+
+func (s *service) {{ $methodName }}(ctx context.Context,{{- range .Arguments }}{{ .Name }} {{ .Type }}, {{- end}}) {{- if gt (len .Returns) 0 }}({{- range .Returns}}{{ . }} ,{{- end}}error){{- else }}error{{- end }} {
 }
 {{- end }}

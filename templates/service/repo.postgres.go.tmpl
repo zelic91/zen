@@ -22,23 +22,15 @@ func NewRepo(db *sqlx.DB) Repo {
 
 func (r Repo) FindAll(
 	ctx context.Context,
-	search string,
-	limit int,
-	offset int,
 ) ([]*dbgen.{{ .CurrentModelName | singularize | title }}, error) {
-	params := dbgen.List{{ .CurrentModelName | title }}Params{
-		Column1: postgres.ToNullString(&search),
-		Limit:   int32(limit),
-		Offset:  int32(offset),
-	}
-	return r.query.List{{ .CurrentModelName | title }}(ctx, params)
+	return r.query.FindAll{{ .CurrentModelName | title }}(ctx)
 }
 
 func (r Repo) FindByID(
 	ctx context.Context,
 	id int64,
 ) (*dbgen.{{ .CurrentModelName | singularize | title }}, error) {
-	return r.query.Get{{ .CurrentModelName | singularize | title }}ById(ctx, id)
+	return r.query.Find{{ .CurrentModelName | singularize | title }}ById(ctx, id)
 }
 
 func (r Repo) Create(
@@ -49,7 +41,7 @@ func (r Repo) Create(
 	{{- end }}
 {{- end }}
 {{- range $propertyName, $property := .CurrentModel.Properties }}
-	{{ $propertyName | camelcase | untitle }} {{ .Type }},
+	{{ $propertyName | camelcase | untitle }} {{- if .NotNull }} {{ .Type }}{{- else }} *{{ .Type }}{{- end }},
 {{- end }}
 ) (*dbgen.{{ .CurrentModelName | singularize | title }}, error) {
 	params := dbgen.Create{{ .CurrentModelName | singularize | title }}Params{
@@ -75,7 +67,7 @@ func (r Repo) Update(
 	{{- end }}
 {{- end }}
 {{- range $propertyName, $property := .CurrentModel.Properties }}
-	{{ $propertyName | camelcase | untitle }} {{ .Type }},
+	{{ $propertyName | camelcase | untitle }} {{- if .NotNull }} {{ .Type }}{{- else }} *{{ .Type }}{{- end }},
 {{- end }}
 ) (*dbgen.{{ .CurrentModelName | singularize | title }}, error) {
 	params := dbgen.Update{{ .CurrentModelName | singularize | title }}Params{
@@ -91,4 +83,11 @@ func (r Repo) Update(
 	}
 
 	return r.query.Update{{ .CurrentModelName | singularize | title }}(ctx, params)
+}
+
+func (r Repo) Delete(
+	ctx context.Context,
+	id int64,
+) error {
+	return r.query.Delete{{ .CurrentModelName | singularize | title }}(ctx, id)
 }

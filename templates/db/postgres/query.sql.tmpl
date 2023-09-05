@@ -5,20 +5,22 @@
             {{- if eq .Type "user" }}
 
 -- {{ $modelName | title }}
--- name: Get{{ $modelName | singularize | title }}ById :one
+-- name: Find{{ $modelName | singularize | title }}ById :one
 SELECT * FROM {{ $modelName }}
 WHERE id = $1 LIMIT 1;
 
--- name: ListAll{{ $modelName | title }} :many
+-- name: FindAll{{ $modelName | title }} :many
 SELECT * FROM {{ $modelName }}
 ORDER BY created_at;
 
--- name: List{{ $modelName | title }} :many
+{{- range $model.SearchBy }}
+-- name: Find{{ $modelName | title }}By{{ . | title }} :many
 SELECT * FROM {{ $modelName }}
-WHERE title LIKE '%' || $1 || '%'
+WHERE {{ . }} LIKE '%' || $1 || '%'
 ORDER BY created_at
 LIMIT $2
 OFFSET $3;
+{{- end }}
 
 -- name: Create{{ $modelName | singularize | title }} :one
 INSERT INTO {{ $modelName }} (
@@ -74,20 +76,23 @@ WHERE id = $1;
             {{- else }}
 
 -- {{ $modelName | title }}
--- name: Get{{ $modelName | singularize | title }}ById :one
+-- name: Find{{ $modelName | singularize | title }}ById :one
 SELECT * FROM {{ $modelName }}
 WHERE id = $1 LIMIT 1;
 
--- name: ListAll{{ $modelName | title }} :many
+-- name: FindAll{{ $modelName | title }} :many
 SELECT * FROM {{ $modelName }}
 ORDER BY created_at;
 
--- name: List{{ $modelName | title }} :many
+{{- range $model.SearchBy }}
+
+-- name: Find{{ $modelName | title }}By{{ . | title }} :many
 SELECT * FROM {{ $modelName }}
-WHERE title LIKE '%' || $1 || '%'
+WHERE {{ . }} LIKE '%' || $1 || '%'
 ORDER BY created_at
 LIMIT $2
 OFFSET $3;
+{{- end }}
 
 -- name: Create{{ $modelName | singularize | title }} :one
 INSERT INTO {{ $modelName }} (
@@ -113,7 +118,13 @@ RETURNING *;
 -- name: Update{{ $modelName | singularize | title }} :one
 UPDATE {{ $modelName }}
 SET 
--- TODO: Add the corresponding update expression    
+    {{- with $i := 2 }}
+        {{- range $propertyName, $property := $model.Properties }}
+    {{ $propertyName }} = ${{ $i }},
+            {{- $i = add $i 1}}
+        {{- end }}
+    updated_by = ${{ $i }},
+    {{- end }}
     updated_at = NOW()
 WHERE id = $1
 RETURNING *;

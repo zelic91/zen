@@ -32,6 +32,9 @@ databases:
       users:
         type: user
         owner: admin
+        searchBy:
+          - username
+          - email
       devices:
         type: data
         owner: user
@@ -49,6 +52,9 @@ databases:
       users:
         type: user
         owner: admin
+        searchBy:
+          - username
+          - email
       devices:
         type: data
         owner: user
@@ -74,13 +80,33 @@ api:
         successResponse: 200
         responseBody: AuthResponse
 
-    /devices:
+    /auth/signup:
+      post:
+        summary: Sign up
+        security: ApiKeyAuth
+        service: Auth
+        operationId: SignUp
+        requestBody: SignUpRequest
+        successResponse: 200
+        responseBody: AuthResponse
+
+    /adm/devices:
       post:
         summary: Register new device token
         security: BearerAuth
         service: Device
         operationId: CreateDevice
         requestBody: CreateDevice
+        successResponse: 201
+        responseBody: DefaultResponse
+
+    /adm/users:
+      post:
+        summary: Create new user
+        security: BearerAuth
+        service: User
+        operationId: CreateUser
+        requestBody: CreateUser
         successResponse: 201
         responseBody: DefaultResponse
 
@@ -95,6 +121,19 @@ api:
         password:
           type: string
 
+    SignUpRequest:
+      required:
+        - username
+        - password
+        - password_confirmation
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        password_confirmation:
+          type: string
+
     CreateDevice:
       required:
         - deviceToken
@@ -105,12 +144,44 @@ api:
         platform:
           type: string
 
+    CreateUser:
+      required:
+        - username
+        - password
+        - email
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+
+    User:
+      required:
+        - username
+        - email
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+
 services:
   User:
     database: postgres
     model: users
     methods:
-      - FindByUsername()
+      FindByUsername:
+        arguments:
+          - name: username
+            type: string
+        returns:
+          - "*dbgen.User"
 
   Auth:
     type: auth
@@ -118,23 +189,38 @@ services:
       User:
         - FindByUsername
     methods:
-      - SignIn(ctx context.Context)
-      - SignUp(ctx context.Context)
 
   Auth2:
     database: mongo
     model: users
     methods:
-      - FindByUsername()
+      CreateUser:
+        arguments:
+      FindByUsername:
+        arguments:
+          - name: username
+            type: string
+        returns:
+          - "*dbgen.User"
 
   Device:
     database: postgres
     model: devices
     methods:
-      - FindByDeviceToken()
+      FindByDeviceToken:
+        arguments:
+          - name: deviceToken
+            type: string
+        returns:
+          - "*gen.DefaultResponse"
 
   Device2:
     database: mongo
     model: devices
     methods:
-      - FindByDeviceToken()
+      FindByDeviceToken:
+        arguments:
+          - name: deviceToken
+            type: string
+        returns:
+          - "*gen.DefaultResponse"

@@ -13,6 +13,7 @@ type Config struct {
 	CurrentModelName    string
 	CurrentModel        Model
 	CurrentCommand      string
+	CurrentServiceName  string
 	CurrentService      Service
 	ServiceOperationMap map[string][]ApiPath
 	ServiceDatabaseMap  map[string]Database
@@ -29,9 +30,9 @@ type Database struct {
 }
 
 type Model struct {
-	Name       string
 	Type       string
 	Owner      string
+	SearchBy   []string `yaml:"searchBy"`
 	Properties map[string]ModelProperty
 }
 
@@ -53,8 +54,18 @@ type Service struct {
 	Type     string
 	Database string
 	Model    string
-	Methods  []string
+	Methods  map[string]ServiceMethod
 	Services map[string][]string
+}
+
+type ServiceMethod struct {
+	Arguments []MethodArgument
+	Returns   []string
+}
+
+type MethodArgument struct {
+	Name string
+	Type string
 }
 
 type Env struct {
