@@ -2,11 +2,15 @@ package {{ .CurrentPackage }}
 
 import (
 	"context"
+{{- if eq .CurrentService.Type "auth" }}
 	"errors"
-	"fmt"
-	"{{ .ModuleName }}/api/gen"
 	"{{ .ModuleName }}/common"
+{{- end }}
+	"log"
+	"{{ .ModuleName }}/api/gen"
+{{- if eq (index .ServiceDatabaseMap .CurrentServiceName).Type "postgres" }}
 	"{{ .ModuleName }}/db/postgres/dbgen"
+{{- end }}
 {{- range $depServiceName, $methods := .CurrentService.Services }}
 	"{{ $.ModuleName }}/{{ $depServiceName | untitle }}"
 {{- end }}
@@ -45,6 +49,7 @@ type Create{{ .CurrentModelName | singularize | title }}Params struct {
 }
 
 type Update{{ .CurrentModelName | singularize | title }}Params struct {
+	ID int64
 	{{- range $propertyName, $property := .CurrentModel.Properties }}
 	{{ $propertyName | camelcase }} {{- if .NotNull }} {{ .Type }}{{- else }}*{{ .Type }}{{- end }}
 	{{- end }}
@@ -150,7 +155,7 @@ func (s service) SignIn(ctx context.Context, body *gen.SignInRequest) (*gen.Auth
 	accessToken, err := s.generateAccessToken(user)
 
 	if err != nil {
-		return nil, fmt.Errorf("cannot generate access token: %v", err)
+		return nil, log.Errorf("cannot generate access token: %v", err)
 	}
 
 	return &gen.AuthResponse{
@@ -166,6 +171,116 @@ func (s service) generateAccessToken(user *dbgen.User) (string, error) {
 }
 {{- end }}
 
+{{- if not (eq .CurrentService.Type "auth") }}
+
+// Support for Internal use cases
+func (s *service) Create{{ .CurrentModelName | singularize | title }}Internal(ctx context.Context, params Create{{ .CurrentModelName | singularize | title }}Params) (*dbgen.{{ .CurrentModelName | singularize | title }}, error) {
+	res, err := s.repo.Create(
+		ctx,
+	{{- range $propertyName, $property := .CurrentModel.Properties }}
+		params.{{ $propertyName | camelcase }},
+	{{- end }}
+	{{- if eq .CurrentModel.Type "user" }}
+		{{- range $propertyName, $property := userProperties }}
+		params.{{ $propertyName | camelcase }},
+		{{- end }}
+	{{- end }}
+	)
+
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (s *service) Update{{ .CurrentModelName | singularize | title }}Internal(ctx context.Context, params Update{{ .CurrentModelName | singularize | title }}Params) (*dbgen.{{ .CurrentModelName | singularize | title }}, error) {
+	res, err := s.repo.Update(
+		ctx,
+		params.ID,
+	{{- range $propertyName, $property := .CurrentModel.Properties }}
+		params.{{ $propertyName | camelcase }},
+	{{- end }}
+	{{- if eq .CurrentModel.Type "user" }}
+		{{- range $propertyName, $property := userProperties }}
+		params.{{ $propertyName | camelcase }},
+		{{- end }}
+	{{- end }}
+	)
+
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (s *service) Delete{{ .CurrentModelName | singularize | title }}Internal(ctx context.Context, id int64) error {
+	err := s.repo.Delete(
+		ctx,
+		id,
+	)
+
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	return nil
+}
+
+{{- if .CurrentService.ScaffoldCRUD }}
+// Support for basic CRUDs use cases
+func (s *service) Create{{ .CurrentModelName | singularize | title }}(ctx context.Context, params *gen.Create{{ .CurrentModelName | singularize | title }}) (*gen.Create{{ .CurrentModelName | singularize | title }}ResponseBody, error) {
+	res, err := s.repo.Create(
+		ctx,
+	{{- range $propertyName, $property := .CurrentModel.Properties }}
+		params.{{ $propertyName | camelcase }},
+	{{- end }}
+	{{- if eq .CurrentModel.Type "user" }}
+		{{- range $propertyName, $property := userProperties }}
+		params.{{ $propertyName | camelcase }},
+		{{- end }}
+	{{- end }}
+	)
+
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (s *service) Update{{ .CurrentModelName | singularize | title }}(ctx context.Context, id int64, params *gen.Update{{ .CurrentModelName | singularize | title }}) (*gen.Update{{ .CurrentModelName | singularize | title }}ResponseBody, error) {
+	res, err := s.repo.Update(
+		ctx,
+		id,
+	{{- range $propertyName, $property := .CurrentModel.Properties }}
+		params.{{ $propertyName | camelcase }},
+	{{- end }}
+	{{- if eq .CurrentModel.Type "user" }}
+		{{- range $propertyName, $property := userProperties }}
+		params.{{ $propertyName | camelcase }},
+		{{- end }}
+	{{- end }}
+	)
+
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	return res, nil
+}
+
+{{- end }}
+
+{{- end }}
+
+// Support for extra implementations
 {{- range $methodName, $method := .CurrentService.Methods }}
 
 func (s *service) {{ $methodName }}(ctx context.Context,{{- range .Arguments }}{{ .Name }} {{ .Type }}, {{- end}}) {{- if gt (len .Returns) 0 }}({{- range .Returns}}{{ . }} ,{{- end}}error){{- else }}error{{- end }} {

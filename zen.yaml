@@ -90,7 +90,7 @@ api:
         successResponse: 200
         responseBody: AuthResponse
 
-    /adm/devices:
+    /devices:
       post:
         summary: Register new device token
         security: BearerAuth
@@ -100,7 +100,7 @@ api:
         successResponse: 201
         responseBody: DefaultResponse
 
-    /adm/users:
+    /users:
       post:
         summary: Create new user
         security: BearerAuth
@@ -108,7 +108,16 @@ api:
         operationId: CreateUser
         requestBody: CreateUser
         successResponse: 201
-        responseBody: DefaultResponse
+        responseBody: CreateUserResponseBody
+
+      put:
+        summary: Update a user
+        security: BearerAuth
+        service: User
+        operationId: UpdateUser
+        requestBody: UpdateUser
+        successResponse: 201
+        responseBody: UpdateUserResponseBody
 
   schemas:
     SignInRequest:
@@ -161,6 +170,37 @@ api:
         lastName:
           type: string
 
+    UpdateUser:
+      properties:
+        password:
+          type: string
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+
+    CreateUserResponseBody:
+      required:
+        - username
+        - email
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+
+    UpdateUserResponseBody:
+      required:
+        - username
+        - email
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+
     User:
       required:
         - username
@@ -172,31 +212,23 @@ api:
           type: string
 
 services:
-  User:
-    database: postgres
-    model: users
-    methods:
-      FindByUsername:
-        arguments:
-          - name: username
-            type: string
-        returns:
-          - "*dbgen.User"
-
   Auth:
     type: auth
+    userService: User # Only apply for `auth`
     services:
       User:
         - FindByUsername
     methods:
 
-  Auth2:
-    database: mongo
+  User:
+    database: postgres
     model: users
+    scaffoldCRUD: true
     methods:
-      CreateUser:
-        arguments:
       FindByUsername:
+        useRepo: true
+        useService: false
+        useServiceMethod:
         arguments:
           - name: username
             type: string
@@ -205,17 +237,6 @@ services:
 
   Device:
     database: postgres
-    model: devices
-    methods:
-      FindByDeviceToken:
-        arguments:
-          - name: deviceToken
-            type: string
-        returns:
-          - "*gen.DefaultResponse"
-
-  Device2:
-    database: mongo
     model: devices
     methods:
       FindByDeviceToken:

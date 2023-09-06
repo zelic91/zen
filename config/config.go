@@ -51,16 +51,21 @@ type ModelReference struct {
 }
 
 type Service struct {
-	Type     string
-	Database string
-	Model    string
-	Methods  map[string]ServiceMethod
-	Services map[string][]string
+	Type         string
+	AuthService  string `yaml:"authService"`
+	ScaffoldCRUD bool   `yaml:"scaffoldCRUD"`
+	Database     string
+	Model        string
+	Methods      map[string]ServiceMethod
+	Services     map[string][]string
 }
 
 type ServiceMethod struct {
-	Arguments []MethodArgument
-	Returns   []string
+	UseRepo          bool   `yaml:"useRepo"`
+	UseService       bool   `yaml:"useService"`
+	UseServiceMethod string `yaml:"useServiceMethod"`
+	Arguments        []MethodArgument
+	Returns          []string
 }
 
 type MethodArgument struct {
