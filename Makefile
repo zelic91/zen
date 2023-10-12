@@ -1,5 +1,5 @@
 test:
-	go run main.go create goservice -m superman.test -d testgen
+	go run main.go create -c zen.yaml -t testgen
 	cd testgen && make init
 
 untest:
