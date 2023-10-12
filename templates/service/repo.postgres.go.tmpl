@@ -91,3 +91,19 @@ func (r Repo) Delete(
 ) error {
 	return r.query.Delete{{ .CurrentModelName | singularize | title }}(ctx, id)
 }
+
+{{- if eq .CurrentModel.Type "user" }}
+func (r Repo) FindByUsername(
+	ctx context.Context,
+	username string,
+) (*dbgen.{{ .CurrentModelName | singularize | title }}, error) {
+	return r.query.Find{{ .CurrentModelName | singularize | title }}ByUsername(ctx, postgres.ToNullString(&username))
+}
+
+func (r Repo) FindByEmail(
+	ctx context.Context,
+	email string,
+) (*dbgen.{{ .CurrentModelName | singularize | title }}, error) {
+	return r.query.Find{{ .CurrentModelName | singularize | title }}ByEmail(ctx, postgres.ToNullString(&email))
+}
+{{- end }}

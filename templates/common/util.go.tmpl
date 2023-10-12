@@ -1,0 +1,37 @@
+package common
+
+
+import (
+	"math/rand"
+	"strings"
+	"time"
+
+	"golang.org/x/crypto/bcrypt"
+)
+
+func GenerateRandomString(length uint) string {
+
+	random := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	chars := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwx0123456789")
+
+	var builder strings.Builder
+
+	for i := 0; i < int(length); i++ {
+		builder.WriteRune(chars[random.Intn(len(chars))])
+	}
+
+	return builder.String()
+
+}
+
+func GeneratePasswordHashed(rawPassword string, passwordSalt string) (string, error) {
+	tempString := rawPassword + passwordSalt
+	bytes, err := bcrypt.GenerateFromPassword([]byte(tempString), 14)
+	return string(bytes), err
+}
+
+func ValidatePassword(rawPassword string, passwordSalt string, passwordHashed string) error {
+	tempString := rawPassword + passwordSalt
+	return bcrypt.CompareHashAndPassword([]byte(passwordHashed), []byte(tempString))
+}

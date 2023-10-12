@@ -33,6 +33,7 @@ type Model struct {
 	Type       string
 	Owner      string
 	SearchBy   []string `yaml:"searchBy"`
+	FindBy     []string `yaml:"findBy"`
 	Properties map[string]ModelProperty
 }
 

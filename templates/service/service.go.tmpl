@@ -137,7 +137,7 @@ func (s service) SignUp(ctx context.Context, body *gen.SignUpRequest) (*gen.Auth
 }
 
 func (s service) SignIn(ctx context.Context, body *gen.SignInRequest) (*gen.AuthResponse, error) {
-	user, err := s.userService.FindUserByUsername(ctx, body.Username)
+	user, err := s.userService.FindByUsername(ctx, body.Username)
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +146,7 @@ func (s service) SignIn(ctx context.Context, body *gen.SignInRequest) (*gen.Auth
 		return nil, ErrUserNotExist
 	}
 
-	err = util.ValidatePassword(body.Password, user.PasswordSalt.String, user.PasswordHashed.String)
+	err = common.ValidatePassword(body.Password, user.PasswordSalt.String, user.PasswordHashed.String)
 
 	if err != nil {
 		return nil, ErrInvalidPassword
@@ -234,7 +234,7 @@ func (s *service) Delete{{ .CurrentModelName | singularize | title }}Internal(ct
 {{- if .CurrentService.ScaffoldCRUD }}
 // Support for basic CRUDs use cases
 func (s *service) Create{{ .CurrentModelName | singularize | title }}(ctx context.Context, params *gen.Create{{ .CurrentModelName | singularize | title }}) (*gen.Create{{ .CurrentModelName | singularize | title }}ResponseBody, error) {
-	res, err := s.repo.Create(
+	/* res, err := s.repo.Create(
 		ctx,
 	{{- range $propertyName, $property := .CurrentModel.Properties }}
 		params.{{ $propertyName | camelcase }},
@@ -251,11 +251,15 @@ func (s *service) Create{{ .CurrentModelName | singularize | title }}(ctx contex
 		return nil, err
 	}
 
-	return res, nil
+	return &gen.Create{{ .CurrentModelName | singularize | title }}ResponseBody{
+		// TODO: Implement this
+	}, nil */
+
+	return nil, nil
 }
 
 func (s *service) Update{{ .CurrentModelName | singularize | title }}(ctx context.Context, id int64, params *gen.Update{{ .CurrentModelName | singularize | title }}) (*gen.Update{{ .CurrentModelName | singularize | title }}ResponseBody, error) {
-	res, err := s.repo.Update(
+	/* res, err := s.repo.Update(
 		ctx,
 		id,
 	{{- range $propertyName, $property := .CurrentModel.Properties }}
@@ -273,7 +277,11 @@ func (s *service) Update{{ .CurrentModelName | singularize | title }}(ctx contex
 		return nil, err
 	}
 
-	return res, nil
+	return &gen.Update{{ .CurrentModelName | singularize | title }}ResponseBody{
+		// TODO: Implement this
+	}, nil */
+
+	return nil, nil
 }
 
 {{- end }}
@@ -282,7 +290,8 @@ func (s *service) Update{{ .CurrentModelName | singularize | title }}(ctx contex
 
 // Support for extra implementations
 {{- range $methodName, $method := .CurrentService.Methods }}
-
-func (s *service) {{ $methodName }}(ctx context.Context,{{- range .Arguments }}{{ .Name }} {{ .Type }}, {{- end}}) {{- if gt (len .Returns) 0 }}({{- range .Returns}}{{ . }} ,{{- end}}error){{- else }}error{{- end }} {
+func (s *service) {{ $methodName }}(ctx context.Context,{{- range .Arguments }}{{ .Name }} {{ .Type }}, {{- end }}) {{- if gt (len .Returns) 0 }}({{- range .Returns }}{{ . }} ,{{- end }}error){{- else }}error{{- end }} {
+	
+	return nil, nil
 }
 {{- end }}
