@@ -217,15 +217,6 @@ api:
           type: string
 
 services:
-  Auth:
-    type: auth
-    userService: User # Only apply for `auth`
-
-  User:
-    type: model
-    database: postgres
-    model: users
-
   Device:
     type: model
     database: postgres
