@@ -35,9 +35,14 @@ databases:
         searchBy:
           - username
           - email
+        findBy:
+          - username
+          - email
       devices:
         type: data
         owner: user
+        findBy:
+          - deviceToken
         properties:
           platform:
             type: string
@@ -215,33 +220,13 @@ services:
   Auth:
     type: auth
     userService: User # Only apply for `auth`
-    services:
-      User:
-        - FindByUsername
-    methods:
 
   User:
+    type: model
     database: postgres
     model: users
-    scaffoldCRUD: true
-    methods:
-      FindByUsername:
-        useRepo: true
-        useService: false
-        useServiceMethod:
-        arguments:
-          - name: username
-            type: string
-        returns:
-          - "*dbgen.User"
 
   Device:
+    type: model
     database: postgres
     model: devices
-    methods:
-      FindByDeviceToken:
-        arguments:
-          - name: deviceToken
-            type: string
-        returns:
-          - "*gen.DefaultResponse"
