@@ -36,9 +36,9 @@ func init() {
 
 func RunCommand(cmd *cobra.Command, args []string) {
 
-	config := config.InitConfig()
-	postgresDB := postgres.InitDatabase(config)
-	mongoDB := mongo.InitMongo(config)
+	config := config.Init()
+	postgresDB := postgres.Init(config)
+	mongoDB := mongo.Init(config)
 
 	e := echo.New()
 	g := e.Group("/api/v1")
@@ -60,6 +60,11 @@ func RunCommand(cmd *cobra.Command, args []string) {
 	g.Use(middleware.CORS())
 	g.Use(authMiddleware...)
 	g.Use(middleware.Logger())
+
+	userRepo := user.NewRepo(postgresDB)
+
+	userService := user.NewService(&userRepo)
+	authService := auth.NewService(authenticator, userService)
 
 {{- range $serviceName, $database := .ServiceDatabaseMap }}
 	{{- if eq .Type "postgres" }}

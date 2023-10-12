@@ -3,10 +3,11 @@ package postgres
 import (
 	"database/sql"
 	"{{ .ModuleName }}/config"
+
 	"github.com/jmoiron/sqlx"
 )
 
-func InitDatabase(config *config.Config) *sqlx.DB {
+func Init(config *config.Config) *sqlx.DB {
 	return sqlx.MustOpen("postgres", config.PostgresURL)
 }
 

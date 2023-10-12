@@ -9,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func InitMongo(config *config.Config) *mongo.Client {
+func Init(config *config.Config) *mongo.Client {
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(config.MongoURL))
 	if err != nil {
 		log.Fatalf("err connecting to Mongo: %v", err)

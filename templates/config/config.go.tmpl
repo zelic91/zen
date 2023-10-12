@@ -12,7 +12,7 @@ type Config struct {
 {{- end }}
 }
 
-func InitConfig() *Config {
+func Init() *Config {
 	viper.SetConfigName(".env")
 	viper.SetConfigType("env")
 	viper.AddConfigPath(".")
