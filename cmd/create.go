@@ -72,6 +72,10 @@ func create(configFile string, outputDir string) {
 	// Generate databases
 	generateDatabases(outputDir, config)
 
+	// Generate mandatory services: auth and user
+	generateAuthService(outputDir, config)
+	generateUserService(outputDir, config)
+
 	// Generate services
 	generateServices(outputDir, config)
 
@@ -217,6 +221,33 @@ func generateApi(
 	generateGeneric(
 		outputPath+"/api",
 		rootTemplatePath+"/api",
+		config,
+	)
+}
+
+func generateAuthService(
+	outputPath string,
+	config *c.Config,
+) {
+	generateSpecific(
+		outputPath+"/auth/service.go",
+		rootTemplatePath+"/service/auth.service.go.tmpl",
+		config,
+	)
+}
+
+func generateUserService(
+	outputPath string,
+	config *c.Config,
+) {
+	generateSpecific(
+		outputPath+"/user/repo.go",
+		rootTemplatePath+"/service/user.repo.postgres.go.tmpl",
+		config,
+	)
+	generateSpecific(
+		outputPath+"/user/service.go",
+		rootTemplatePath+"/service/user.service.go.tmpl",
 		config,
 	)
 }

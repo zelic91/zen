@@ -1,0 +1,99 @@
+package auth
+
+import (
+	"context"
+	"errors"
+	"{{ .ModuleName }}/common"
+	"log"
+	"{{ .ModuleName }}/api/gen"
+	"{{ .ModuleName }}/db/postgres/dbgen"
+    "{{ .ModuleName }}/user"
+	"github.com/lestrrat-go/jwx/jwt"
+)
+
+var (
+	ErrUserNotExist     = errors.New("user not exist")
+	ErrUserExists       = errors.New("user exists")
+	ErrInvalidPassword  = errors.New("invalid password")
+	ErrPasswordNotMatch = errors.New("password not match")
+	ErrPasswordTooShort = errors.New("password too short")
+)
+
+type JWSValidator interface {
+	ValidateJWS(jws string) (jwt.Token, error)
+	GenerateJWS(info interface{}, permissions interface{}) (string, error)
+}
+
+type service struct {
+	authenticator JWSValidator
+}
+
+func NewService(
+	authenticator JWSValidator,
+) *service {
+	return &service{
+		authenticator: authenticator,
+	}
+}
+
+func (s service) SignUp(ctx context.Context, body *gen.SignUpRequest) (*gen.AuthResponse, error) {
+	if body.Password != body.PasswordConfirmation {
+		return nil, ErrPasswordNotMatch
+	}
+
+	user, err := s.userService.CreateUser(ctx, &user.CreateUserParams{
+		Username:  body.Username,
+		FirstName: body.FirstName,
+		LastName:  body.LastName,
+		Email:     body.Email,
+		Password:  body.Password,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	accessToken, err := s.generateAccessToken(user)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &gen.AuthResponse{
+		AccessToken: accessToken,
+	}, nil
+}
+
+func (s service) SignIn(ctx context.Context, body *gen.SignInRequest) (*gen.AuthResponse, error) {
+	user, err := s.userService.FindByUsername(ctx, body.Username)
+	if err != nil {
+		return nil, err
+	}
+
+	if user == nil {
+		return nil, ErrUserNotExist
+	}
+
+	err = common.ValidatePassword(body.Password, user.PasswordSalt.String, user.PasswordHashed.String)
+
+	if err != nil {
+		return nil, ErrInvalidPassword
+	}
+
+	accessToken, err := s.generateAccessToken(user)
+
+	if err != nil {
+		return nil, log.Errorf("cannot generate access token: %v", err)
+	}
+
+	return &gen.AuthResponse{
+		AccessToken: accessToken,
+	}, nil
+}
+
+func (s service) generateAccessToken(user *dbgen.User) (string, error) {
+	infoClaim := common.UserClaims{
+		ID: user.ID,
+	}
+	return s.authenticator.GenerateJWS(infoClaim, nil)
+}
