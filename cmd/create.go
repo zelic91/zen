@@ -73,10 +73,10 @@ func create(configFile string, outputDir string) {
 	generateDatabases(outputDir, config)
 
 	// Generate mandatory services: auth and user
-	generateAuthService(outputDir, config)
 	generateUserService(outputDir, config)
+	generateAuthService(outputDir, config)
 
-	// Generate services
+	// Generate other services
 	generateServices(outputDir, config)
 
 	log.Println("🍺🍺🍺 DONE.")

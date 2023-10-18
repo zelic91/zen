@@ -31,11 +31,7 @@ CREATE TABLE admins (
 CREATE UNIQUE INDEX idx_admins_unique_username ON admins (username);
 CREATE UNIQUE INDEX idx_admins_unique_email ON admins (email);
 
-{{- range $key, $value := .Databases }}
-    {{- if eq .Type "postgres" }}
-        {{- range $modelName, $model := .Models }}
-            {{- if eq .Type "user" }}
-CREATE TABLE {{ $modelName }} (
+CREATE TABLE users (
     id BIGSERIAL PRIMARY KEY,
     first_name TEXT,
     last_name TEXT,
@@ -50,30 +46,31 @@ CREATE TABLE {{ $modelName }} (
     created_at TIMESTAMP,
     updated_at TIMESTAMP,
     deleted_at TIMESTAMP,
-    CONSTRAINT fk_created_by_{{ .Owner }}
+    CONSTRAINT fk_created_by_admin
         FOREIGN KEY(created_by)
-            REFERENCES {{ .Owner }}s(id)
+            REFERENCES admins(id)
             ON DELETE CASCADE,
-    CONSTRAINT fk_updated_by_{{ .Owner }}
+    CONSTRAINT fk_updated_by_admin
         FOREIGN KEY(created_by)
-            REFERENCES {{ .Owner }}s(id)
+            REFERENCES admins(id)
             ON DELETE CASCADE,
-    CONSTRAINT fk_deleted_by_{{ .Owner }}
+    CONSTRAINT fk_deleted_by_admin
         FOREIGN KEY(deleted_by)
-            REFERENCES {{ .Owner }}s(id)
+            REFERENCES admins(id)
             ON DELETE CASCADE
 );
 
-CREATE UNIQUE INDEX idx_{{ $modelName }}_unique_username ON {{ $modelName }} (username);
-CREATE UNIQUE INDEX idx_{{ $modelName }}_unique_email ON {{ $modelName }} (email);
+CREATE UNIQUE INDEX idx_users_unique_username ON users (username);
+CREATE UNIQUE INDEX idx_users_unique_email ON users (email);
 
-            {{- else }}
-
+{{- range $key, $value := .Databases }}
+    {{- if eq .Type "postgres" }}
+        {{- range $modelName, $model := .Models }}
 CREATE TABLE {{ $modelName }} (
     id BIGSERIAL PRIMARY KEY,
     
     {{- range $propertyName, $property := .Properties }}
-    {{ $propertyName }} {{ .Type }}{{ if .NotNull }} NOT NULL {{ end }},
+    {{ $propertyName }} {{ sqlType .Type }}{{ if .NotNull }} NOT NULL {{ end }},
     {{- end }}
 
     created_by BIGSERIAL,
@@ -95,7 +92,6 @@ CREATE TABLE {{ $modelName }} (
             REFERENCES {{ .Owner }}s(id)
             ON DELETE CASCADE
 );
-            {{- end }}
         {{- end }}
     {{- end }}
 {{- end }}
@@ -110,4 +106,5 @@ DROP TABLE {{ $modelName }};
     {{- end }}
 {{- end }}
 
+DROP TABLE users;
 DROP TABLE admins;

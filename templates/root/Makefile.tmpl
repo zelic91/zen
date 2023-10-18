@@ -1,3 +1,5 @@
+DATABASE_URL := $(shell grep POSTGRES_URL= .env | sed 's/POSTGRES_URL=//')
+
 init:
 	go mod tidy
 	go get -u github.com/spf13/cobra@latest
@@ -11,7 +13,7 @@ dep:
 	go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@latest
 
 migrate:
-	dbmate up
+	dbmate -u $(DATABASE_URL) -d ./db/postgres/migrations -s ./db/postgres/schema.sql up
 
 apigen:
 	rm -rf api/gen

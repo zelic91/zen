@@ -13,6 +13,7 @@ func FuncMap() template.FuncMap {
 		"singularize":    Singularize,
 		"userProperties": UserProperties,
 		"loop":           Loop,
+		"sqlType":        SQLType,
 	}
 }
 
@@ -64,5 +65,16 @@ func Loop(start int64, length int64) []int64 {
 	for i := start; int64(len(ret)) < length; i++ {
 		ret = append(ret, i)
 	}
+	return ret
+}
+
+func SQLType(goType string) string {
+	var ret string
+
+	switch goType {
+	case "string":
+		ret = "VARCHAR"
+	}
+
 	return ret
 }

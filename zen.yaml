@@ -29,15 +29,6 @@ databases:
   postgres:
     type: postgres
     models:
-      users:
-        type: user
-        owner: admin
-        searchBy:
-          - username
-          - email
-        findBy:
-          - username
-          - email
       devices:
         type: data
         owner: user
