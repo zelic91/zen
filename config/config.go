@@ -75,9 +75,10 @@ type MethodArgument struct {
 }
 
 type Env struct {
-	Name       string
-	StructName string `yaml:"structName"`
-	Type       string
+	Name         string
+	StructName   string `yaml:"structName"`
+	Type         string
+	DefaultValue string `yaml:"defaultValue"`
 }
 
 type Api struct {
