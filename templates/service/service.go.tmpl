@@ -2,40 +2,12 @@ package {{ .CurrentPackage }}
 
 import (
 	"context"
-{{- if eq .CurrentService.Type "auth" }}
-	"errors"
-	"{{ .ModuleName }}/common"
-{{- end }}
 	"log"
 	"{{ .ModuleName }}/api/gen"
 {{- if eq (index .ServiceDatabaseMap .CurrentServiceName).Type "postgres" }}
 	"{{ .ModuleName }}/db/postgres/dbgen"
 {{- end }}
-{{- range $depServiceName, $methods := .CurrentService.Services }}
-	"{{ $.ModuleName }}/{{ $depServiceName | untitle }}"
-{{- end }}
-{{- if eq .CurrentService.Type "auth" }}
-	"github.com/lestrrat-go/jwx/jwt"
-{{- end }}
 )
-
-{{- if eq .CurrentService.Type "auth" }}
-
-var (
-	ErrUserNotExist     = errors.New("user not exist")
-	ErrUserExists       = errors.New("user exists")
-	ErrInvalidPassword  = errors.New("invalid password")
-	ErrPasswordNotMatch = errors.New("password not match")
-	ErrPasswordTooShort = errors.New("password too short")
-)
-
-type JWSValidator interface {
-	ValidateJWS(jws string) (jwt.Token, error)
-	GenerateJWS(info interface{}, permissions interface{}) (string, error)
-}
-{{- end }}
-
-{{- if not (eq .CurrentService.Type "auth") }}
 
 type Create{{ .CurrentModelName | singularize | title }}Params struct {
 	{{- range $propertyName, $property := .CurrentModel.Properties }}
@@ -59,179 +31,19 @@ type Update{{ .CurrentModelName | singularize | title }}Params struct {
 		{{- end }}
 	{{- end }}
 }
-{{- end }}
-
-{{- range $depServiceName, $methods := .CurrentService.Services }}
-type {{ $depServiceName }}Service interface {
-	{{- range $methodName := $methods }}
-		{{- with index $.Services $depServiceName }}
-			{{- with index .Methods $methodName }}
-	{{ $methodName }}(ctx context.Context,{{- range .Arguments }}{{ .Name }} {{ .Type }}, {{- end}}) {{- if gt (len .Returns) 0 }}(error){{- else }}error{{- end }}
-			{{- end }}
-		{{- end }}
-	{{- end }}
-}
-{{- end }}
 
 type service struct {
-{{- if eq .CurrentService.Type "auth" }}
-	authenticator JWSValidator
-{{- else }}
 	repo *Repo
-{{- end }}
-{{- range $depServiceName, $methods := .CurrentService.Services }}
-	{{ $depServiceName | untitle }}Service {{ $depServiceName }}Service
-{{- end }}
 }
 
 func NewService(
-{{- range $depServiceName, $methods := .CurrentService.Services }}
-	{{ $depServiceName | untitle }}Service {{ $depServiceName }}Service,
-{{- end }}
-{{- if eq .CurrentService.Type "auth" }}
-	authenticator JWSValidator,
-{{- else }}
 	repo *Repo,
-{{- end }}
 ) *service {
 	return &service{
-	{{- range $depServiceName, $methods := .CurrentService.Services }}
-		{{ $depServiceName | untitle }}Service: {{ $depServiceName | untitle }}Service,
-	{{- end }}
-	{{- if eq .CurrentService.Type "auth" }}
-		authenticator: authenticator,
-	{{- else }}
 		repo: repo,
-	{{- end }}
 	}
 }
 
-{{- if eq .CurrentService.Type "auth" }}
-
-func (s service) SignUp(ctx context.Context, body *gen.SignUpRequest) (*gen.AuthResponse, error) {
-	if body.Password != body.PasswordConfirmation {
-		return nil, ErrPasswordNotMatch
-	}
-
-	user, err := s.userService.CreateUser(ctx, &user.CreateUserParams{
-		Username:  body.Username,
-		FirstName: body.FirstName,
-		LastName:  body.LastName,
-		Email:     body.Email,
-		Password:  body.Password,
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	accessToken, err := s.generateAccessToken(user)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &gen.AuthResponse{
-		AccessToken: accessToken,
-	}, nil
-}
-
-func (s service) SignIn(ctx context.Context, body *gen.SignInRequest) (*gen.AuthResponse, error) {
-	user, err := s.userService.FindByUsername(ctx, body.Username)
-	if err != nil {
-		return nil, err
-	}
-
-	if user == nil {
-		return nil, ErrUserNotExist
-	}
-
-	err = common.ValidatePassword(body.Password, user.PasswordSalt.String, user.PasswordHashed.String)
-
-	if err != nil {
-		return nil, ErrInvalidPassword
-	}
-
-	accessToken, err := s.generateAccessToken(user)
-
-	if err != nil {
-		return nil, log.Errorf("cannot generate access token: %v", err)
-	}
-
-	return &gen.AuthResponse{
-		AccessToken: accessToken,
-	}, nil
-}
-
-func (s service) generateAccessToken(user *dbgen.User) (string, error) {
-	infoClaim := common.UserClaims{
-		ID: user.ID,
-	}
-	return s.authenticator.GenerateJWS(infoClaim, nil)
-}
-{{- end }}
-
-{{- if not (eq .CurrentService.Type "auth") }}
-
-// Support for Internal use cases
-func (s *service) Create{{ .CurrentModelName | singularize | title }}Internal(ctx context.Context, params Create{{ .CurrentModelName | singularize | title }}Params) (*dbgen.{{ .CurrentModelName | singularize | title }}, error) {
-	res, err := s.repo.Create(
-		ctx,
-	{{- range $propertyName, $property := .CurrentModel.Properties }}
-		params.{{ $propertyName | camelcase }},
-	{{- end }}
-	{{- if eq .CurrentModel.Type "user" }}
-		{{- range $propertyName, $property := userProperties }}
-		params.{{ $propertyName | camelcase }},
-		{{- end }}
-	{{- end }}
-	)
-
-	if err != nil {
-		log.Println(err)
-		return nil, err
-	}
-
-	return res, nil
-}
-
-func (s *service) Update{{ .CurrentModelName | singularize | title }}Internal(ctx context.Context, params Update{{ .CurrentModelName | singularize | title }}Params) (*dbgen.{{ .CurrentModelName | singularize | title }}, error) {
-	res, err := s.repo.Update(
-		ctx,
-		params.ID,
-	{{- range $propertyName, $property := .CurrentModel.Properties }}
-		params.{{ $propertyName | camelcase }},
-	{{- end }}
-	{{- if eq .CurrentModel.Type "user" }}
-		{{- range $propertyName, $property := userProperties }}
-		params.{{ $propertyName | camelcase }},
-		{{- end }}
-	{{- end }}
-	)
-
-	if err != nil {
-		log.Println(err)
-		return nil, err
-	}
-
-	return res, nil
-}
-
-func (s *service) Delete{{ .CurrentModelName | singularize | title }}Internal(ctx context.Context, id int64) error {
-	err := s.repo.Delete(
-		ctx,
-		id,
-	)
-
-	if err != nil {
-		log.Println(err)
-		return err
-	}
-
-	return nil
-}
-
-{{- if .CurrentService.ScaffoldCRUD }}
 // Support for basic CRUDs use cases
 func (s *service) Create{{ .CurrentModelName | singularize | title }}(ctx context.Context, params *gen.Create{{ .CurrentModelName | singularize | title }}) (*gen.Create{{ .CurrentModelName | singularize | title }}ResponseBody, error) {
 	/* res, err := s.repo.Create(
@@ -283,10 +95,6 @@ func (s *service) Update{{ .CurrentModelName | singularize | title }}(ctx contex
 
 	return nil, nil
 }
-
-{{- end }}
-
-{{- end }}
 
 // Support for extra implementations
 {{- range $methodName, $method := .CurrentService.Methods }}
