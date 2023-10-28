@@ -10,6 +10,7 @@ env:
   POSTGRES_URL:
     structName: PostgresURL
     type: string
+    defaultValue: postgres://postgres:postgres@localhost:5432/testgen?sslmode=disable
   MONGO_URL:
     structName: MongoURL
     type: string
