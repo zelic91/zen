@@ -4,7 +4,7 @@ init:
 	go mod tidy
 	go get -u github.com/spf13/cobra@latest
 	go get -u github.com/spf13/viper
-	mv env.example .env
+	cp env.example .env
 	mv gitignore .gitignore
 
 dep:
