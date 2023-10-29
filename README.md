@@ -16,6 +16,11 @@ In order to run all Go binaries globally, you need to include `/go/bin` in the P
 export PATH="$GOPATH/bin:$PATH"
 ```
 
+## TODO
+- [ ] Add deployment manifests to support k8s.
+- [ ] Add Github Actions workflow.
+- [ ] Add the ability to check for existing package/file and only generate if missing.
+
 ## Notes
 
 This is a very limited package which is built for my own need, you might find it very silly and clumpsy. If so, ignore it. Thanks.
