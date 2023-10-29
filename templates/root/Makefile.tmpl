@@ -34,7 +34,7 @@ dbgen_postgres:
 	rm -rf db/postgres/dbgen
 	sqlc -f db/postgres/sqlc.config.yaml generate
 
-gen: apigen dbgen_mongo dbgen_postgres
+gen: migrate apigen dbgen_mongo dbgen_postgres
 	go mod tidy
 
 {{- range $commandName, $command := .Commands }}
