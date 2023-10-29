@@ -7,7 +7,7 @@ type Config struct {
 	Api                 Api
 	Commands            map[string]Command
 	Databases           map[string]Database
-	Services            map[string]Service
+	Services            []Service
 	Env                 map[string]Env
 	CurrentPackage      string
 	CurrentModelName    string
@@ -17,6 +17,15 @@ type Config struct {
 	CurrentService      Service
 	ServiceOperationMap map[string][]ApiPath
 	ServiceDatabaseMap  map[string]Database
+}
+
+func (c Config) ServiceWithName(name string) *Service {
+	for _, service := range c.Services {
+		if service.Name == name {
+			return &service
+		}
+	}
+	return nil
 }
 
 type Command struct {
@@ -62,13 +71,11 @@ type ModelReference struct {
 }
 
 type Service struct {
-	Type         string
-	AuthService  string `yaml:"authService"`
-	ScaffoldCRUD bool   `yaml:"scaffoldCRUD"`
-	Database     string
-	Model        string
-	Methods      map[string]ServiceMethod
-	Services     map[string][]string
+	Name        string
+	Type        string
+	AuthService string `yaml:"authService"`
+	Database    string
+	Model       string
 }
 
 type ServiceMethod struct {

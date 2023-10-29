@@ -111,7 +111,7 @@ func GetPermissionClaimsFromToken(token jwt.Token) ([]string, error) {
 	return claims, nil
 }
 
-func GetUserInfoClaims(v JWSValidator, req *http.Request) (*common.UserClaims, error) {
+func GetUserInfoClaims(v JWSValidator, req *http.Request) (*common.AuthUser, error) {
 
 	jws, err := GetJWSFromRequest(req)
 	if err != nil {
@@ -128,7 +128,7 @@ func GetUserInfoClaims(v JWSValidator, req *http.Request) (*common.UserClaims, e
 		return nil, errors.New("user info invalid")
 	}
 
-	ret := NewUserClaimsFromMap(userInfoClaims.(map[string]interface{}))
+	ret := NewAuthUserFromMap(userInfoClaims.(map[string]interface{}))
 
 	return ret, nil
 }
@@ -149,7 +149,7 @@ func CreateUserMiddleware(v JWSValidator) echo.MiddlewareFunc {
 				return err
 			}
 
-			ctx := NewContextWithUserClaims(c, user)
+			ctx := NewContextWithAuthUser(c, user)
 			next(ctx)
 			return nil
 		}
@@ -175,17 +175,17 @@ func CreateAuthMiddleware(v JWSValidator) ([]echo.MiddlewareFunc, error) {
 	return []echo.MiddlewareFunc{validatorMiddleware, userMiddleware}, nil
 }
 
-func NewContextWithUserClaims(c echo.Context, user *common.UserClaims) echo.Context {
+func NewContextWithAuthUser(c echo.Context, user *common.AuthUser) echo.Context {
 	c.Set("User", user)
 	return c
 }
 
-func GetUserClaimsFromContext(c echo.Context) *common.UserClaims {
-	return c.Get("User").(*common.UserClaims)
+func GetAuthUserFromContext(c echo.Context) *common.AuthUser {
+	return c.Get("User").(*common.AuthUser)
 }
 
-func NewUserClaimsFromMap(m map[string]interface{}) *common.UserClaims {
-	return &common.UserClaims{
+func NewAuthUserFromMap(m map[string]interface{}) *common.AuthUser {
+	return &common.AuthUser{
 		ID: int64(m["id"].(float64)),
 	}
 }

@@ -3,18 +3,20 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"{{ .ModuleName }}/api"
-	"{{ .ModuleName }}/api/gen"
-	"{{ .ModuleName }}/config"
-	"{{ .ModuleName }}/db/postgres"
-	"{{ .ModuleName }}/db/mongo"
-{{- range $serviceName, $service := .Services }}
-	"{{ $.ModuleName }}/{{ $serviceName | snakecase }}"
-{{- end }}
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"{{ .ModuleName }}/api"
+	"{{ .ModuleName }}/api/gen"
+	"{{ .ModuleName }}/auth"
+	"{{ .ModuleName }}/config"
+	"{{ .ModuleName }}/db/postgres"
+	// "{{ .ModuleName }}/db/mongo"
+{{- range $index, $service := .Services }}
+	"{{ $.ModuleName }}/{{ $service.Name | snakecase }}"
+{{- end }}
+	"{{ .ModuleName }}/user"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -38,7 +40,7 @@ func RunCommand(cmd *cobra.Command, args []string) {
 
 	config := config.Init()
 	postgresDB := postgres.Init(config)
-	mongoDB := mongo.Init(config)
+	// mongoDB := mongo.Init(config)
 
 	e := echo.New()
 	g := e.Group("/api/v1")
@@ -77,13 +79,10 @@ func RunCommand(cmd *cobra.Command, args []string) {
 	{{- end }}
 {{- end }}
 
-{{- range $serviceName, $service := .Services }}
-	{{- if eq .Type "auth" }}
-	{{ $serviceName | untitle }}Service := {{ $serviceName | untitle }}.NewService(authenticator,{{- range $depServiceName, $depService := .Services }} {{ $depServiceName | untitle }}Service, {{- end }})
-	{{- else }}
-	{{ $serviceName | untitle }}Service := {{ $serviceName | untitle }}.NewService({{- range $depServiceName, $depService := .Services }} {{ $depServiceName | untitle }}Service, {{- end }}&{{ $serviceName | untitle }}Repo)
-	{{- end }}
+{{- range $index, $service := .Services }}
+	{{ $service.Name | untitle }}Service := {{ $service.Name | untitle }}.NewService(&{{ $service.Name | untitle }}Repo)
 {{- end }}
+
 
 	serverImpl := api.NewServerImpl(
 		{{- range $serviceName, $operation := .ServiceOperationMap }}

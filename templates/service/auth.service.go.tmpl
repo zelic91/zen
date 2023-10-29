@@ -3,11 +3,12 @@ package auth
 import (
 	"context"
 	"errors"
+	"fmt"
 	"{{ .ModuleName }}/common"
-	"log"
 	"{{ .ModuleName }}/api/gen"
 	"{{ .ModuleName }}/db/postgres/dbgen"
     "{{ .ModuleName }}/user"
+
 	"github.com/lestrrat-go/jwx/jwt"
 )
 
@@ -24,15 +25,24 @@ type JWSValidator interface {
 	GenerateJWS(info interface{}, permissions interface{}) (string, error)
 }
 
+
+type UserService interface {
+	CreateUser(ctx context.Context, params user.CreateUserParams) (*dbgen.User, error)
+	FindByUsername(ctx context.Context, username string) (*dbgen.User, error)
+}
+
 type service struct {
 	authenticator JWSValidator
+	userService   UserService
 }
 
 func NewService(
 	authenticator JWSValidator,
+	userService UserService,
 ) *service {
 	return &service{
 		authenticator: authenticator,
+		userService:   userService,
 	}
 }
 
@@ -41,12 +51,16 @@ func (s service) SignUp(ctx context.Context, body *gen.SignUpRequest) (*gen.Auth
 		return nil, ErrPasswordNotMatch
 	}
 
-	user, err := s.userService.CreateUser(ctx, &user.CreateUserParams{
-		Username:  body.Username,
-		FirstName: body.FirstName,
-		LastName:  body.LastName,
-		Email:     body.Email,
-		Password:  body.Password,
+	passwordSalt := common.GenerateRandomString(32)
+	passwordHashed, err := common.GeneratePasswordHashed(body.Password, passwordSalt)
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := s.userService.CreateUser(ctx, user.CreateUserParams{
+		Username:       body.Username,
+		PasswordHashed: &passwordHashed,
+		PasswordSalt:   &passwordSalt,
 	})
 
 	if err != nil {
@@ -83,7 +97,7 @@ func (s service) SignIn(ctx context.Context, body *gen.SignInRequest) (*gen.Auth
 	accessToken, err := s.generateAccessToken(user)
 
 	if err != nil {
-		return nil, log.Errorf("cannot generate access token: %v", err)
+		return nil, fmt.Errorf("cannot generate access token: %v", err)
 	}
 
 	return &gen.AuthResponse{
@@ -92,7 +106,7 @@ func (s service) SignIn(ctx context.Context, body *gen.SignInRequest) (*gen.Auth
 }
 
 func (s service) generateAccessToken(user *dbgen.User) (string, error) {
-	infoClaim := common.UserClaims{
+	infoClaim := common.AuthUser{
 		ID: user.ID,
 	}
 	return s.authenticator.GenerateJWS(infoClaim, nil)

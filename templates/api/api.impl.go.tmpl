@@ -13,7 +13,7 @@ import (
 {{- range $service, $apiPaths := .ServiceOperationMap}}
 type {{ $service }}Service interface {
 	{{- range $apiPaths }}
-	{{ .OperationID }}(ctx context.Context{{- if eq .Security "BearerAuth"}}, user *common.UserClaims{{- end }}{{- if .RequestBody }}, body *gen.{{ .RequestBody }}{{- end }}) (*gen.{{ .ResponseBody }}, error) 
+	{{ .OperationID }}(ctx context.Context{{- if eq .Security "BearerAuth"}}, user *common.AuthUser{{- end }}{{- if .RequestBody }}, body *gen.{{ .RequestBody }}{{- end }}) (*gen.{{ .ResponseBody }}, error) 
 	{{- end}}
 }
 {{- end }}
@@ -46,7 +46,7 @@ func NewServerImpl(
 	{{- range $apiPaths }}
 func (s *ServerImpl) {{ .OperationID }}(ctx echo.Context) error {
 	{{- if eq .Security "BearerAuth" }}
-	user := GetUserClaimsFromContext(ctx)
+	user := GetAuthUserFromContext(ctx)
 	{{- end }}
 
 	{{- if .RequestBody }}

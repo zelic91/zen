@@ -7,6 +7,7 @@ env:
     type: string
   PORT:
     type: int
+    defaultValue: 3000
   POSTGRES_URL:
     structName: PostgresURL
     type: string
@@ -84,7 +85,7 @@ api:
         service: Auth
         operationId: SignUp
         requestBody: SignUpRequest
-        successResponse: 200
+        successResponse: 201
         responseBody: AuthResponse
 
     /devices:
@@ -96,25 +97,6 @@ api:
         requestBody: CreateDevice
         successResponse: 201
         responseBody: DefaultResponse
-
-    /users:
-      post:
-        summary: Create new user
-        security: BearerAuth
-        service: User
-        operationId: CreateUser
-        requestBody: CreateUser
-        successResponse: 201
-        responseBody: CreateUserResponseBody
-
-      put:
-        summary: Update a user
-        security: BearerAuth
-        service: User
-        operationId: UpdateUser
-        requestBody: UpdateUser
-        successResponse: 201
-        responseBody: UpdateUserResponseBody
 
   schemas:
     SignInRequest:
@@ -150,54 +132,6 @@ api:
         platform:
           type: string
 
-    CreateUser:
-      required:
-        - username
-        - password
-        - email
-      properties:
-        username:
-          type: string
-        password:
-          type: string
-        email:
-          type: string
-        firstName:
-          type: string
-        lastName:
-          type: string
-
-    UpdateUser:
-      properties:
-        password:
-          type: string
-        email:
-          type: string
-        firstName:
-          type: string
-        lastName:
-          type: string
-
-    CreateUserResponseBody:
-      required:
-        - username
-        - email
-      properties:
-        username:
-          type: string
-        email:
-          type: string
-
-    UpdateUserResponseBody:
-      required:
-        - username
-        - email
-      properties:
-        username:
-          type: string
-        email:
-          type: string
-
     User:
       required:
         - username
@@ -209,7 +143,7 @@ api:
           type: string
 
 services:
-  Device:
+  - name: Device
     type: model
     database: postgres
     model: devices

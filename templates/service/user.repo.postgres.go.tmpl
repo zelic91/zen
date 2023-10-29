@@ -23,7 +23,7 @@ func NewRepo(db *sqlx.DB) Repo {
 func (r Repo) FindAll(
 	ctx context.Context,
 ) ([]*dbgen.User, error) {
-	return r.query.FindAllUser(ctx)
+	return r.query.FindAllUsers(ctx)
 }
 
 func (r Repo) FindByID(

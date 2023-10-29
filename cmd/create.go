@@ -199,7 +199,13 @@ func generateDatabases(
 				}
 				packageName := strings.ToLower(serviceName)
 				config.CurrentPackage = packageName
-				config.CurrentModelName = config.Services[serviceName].Model
+				service := config.ServiceWithName(serviceName)
+
+				if service == nil {
+					continue
+				}
+
+				config.CurrentModelName = service.Model
 				model := database.ModelWithName(config.CurrentModelName)
 				if model == nil {
 					continue
@@ -261,11 +267,11 @@ func generateServices(
 	config *c.Config,
 ) {
 	serviceDatabaseMap := buildServiceDatabaseMap(config)
-	for serviceName, service := range config.Services {
-		packageName := strings.ToLower(serviceName)
+	for _, service := range config.Services {
+		packageName := strings.ToLower(service.Name)
 		config.CurrentPackage = packageName
 
-		database := serviceDatabaseMap[serviceName]
+		database := serviceDatabaseMap[service.Name]
 
 		config.CurrentModelName = service.Model
 		model := database.ModelWithName(config.CurrentModelName)
@@ -282,7 +288,7 @@ func generateServices(
 			)
 		}
 
-		config.CurrentServiceName = serviceName
+		config.CurrentServiceName = service.Name
 		config.CurrentService = service
 		generateSpecific(
 			outputPath+"/"+packageName+"/service.go",
@@ -460,8 +466,8 @@ func buildServiceOperationMap(config *c.Config) map[string][]c.ApiPath {
 
 func buildServiceDatabaseMap(config *c.Config) map[string]c.Database {
 	ret := map[string]c.Database{}
-	for serviceName, service := range config.Services {
-		ret[serviceName] = config.Databases[service.Database]
+	for _, service := range config.Services {
+		ret[service.Name] = config.Databases[service.Database]
 	}
 	return ret
 }

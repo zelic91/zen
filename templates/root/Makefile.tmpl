@@ -21,10 +21,10 @@ apigen:
 	oapi-codegen -package gen api/openapi.yaml > api/gen/spec.gen.go
 
 dbgen_mongo:
-{{- range $serviceName, $service := $.Services }}
+{{- range $index, $service := $.Services }}
 	{{- range $serviceName2, $database := $.ServiceDatabaseMap }}
-		{{- if and (eq $serviceName $serviceName2) (eq .Type "mongo") }}
-	repogen -pkg={{ $serviceName | singularize | lower }} -dest={{ $serviceName | singularize | lower }}/repo.go \
+		{{- if and (eq $service.Name $serviceName2) (eq .Type "mongo") }}
+	repogen -pkg={{ $service.Name | singularize | lower }} -dest={{ $service.Name | singularize | lower }}/repo.go \
 			-model={{ $service.Model | singularize | title }} -repo=Repo
 		{{- end }}
 	{{- end }}

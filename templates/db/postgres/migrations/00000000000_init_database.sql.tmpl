@@ -13,19 +13,7 @@ CREATE TABLE admins (
     deleted_by BIGSERIAL,
     created_at TIMESTAMP,
     updated_at TIMESTAMP,
-    deleted_at TIMESTAMP,
-    CONSTRAINT fk_created_by_admin
-        FOREIGN KEY(created_by)
-            REFERENCES admins(id)
-            ON DELETE CASCADE,
-    CONSTRAINT fk_updated_by_admin
-        FOREIGN KEY(updated_by)
-            REFERENCES admins(id)
-            ON DELETE CASCADE,
-    CONSTRAINT fk_deleted_by_admin
-        FOREIGN KEY(deleted_by)
-            REFERENCES admins(id)
-            ON DELETE CASCADE
+    deleted_at TIMESTAMP
 );
 
 CREATE UNIQUE INDEX idx_admins_unique_username ON admins (username);
@@ -45,19 +33,7 @@ CREATE TABLE users (
     deleted_by BIGSERIAL,
     created_at TIMESTAMP,
     updated_at TIMESTAMP,
-    deleted_at TIMESTAMP,
-    CONSTRAINT fk_created_by_admin
-        FOREIGN KEY(created_by)
-            REFERENCES admins(id)
-            ON DELETE CASCADE,
-    CONSTRAINT fk_updated_by_admin
-        FOREIGN KEY(created_by)
-            REFERENCES admins(id)
-            ON DELETE CASCADE,
-    CONSTRAINT fk_deleted_by_admin
-        FOREIGN KEY(deleted_by)
-            REFERENCES admins(id)
-            ON DELETE CASCADE
+    deleted_at TIMESTAMP
 );
 
 CREATE UNIQUE INDEX idx_users_unique_username ON users (username);
@@ -65,8 +41,8 @@ CREATE UNIQUE INDEX idx_users_unique_email ON users (email);
 
 {{- range $key, $value := .Databases }}
     {{- if eq .Type "postgres" }}
-        {{- range $modelName, $model := .Models }}
-CREATE TABLE {{ $modelName }} (
+        {{- range $index, $model := .Models }}
+CREATE TABLE {{ $model.Name }} (
     id BIGSERIAL PRIMARY KEY,
     
     {{- range $propertyName, $property := .Properties }}
@@ -79,6 +55,8 @@ CREATE TABLE {{ $modelName }} (
     created_at TIMESTAMP,
     updated_at TIMESTAMP,
     deleted_at TIMESTAMP,
+
+    {{- if .Owner}}
     CONSTRAINT fk_created_by_{{ .Owner }}
         FOREIGN KEY(created_by)
             REFERENCES {{ .Owner }}s(id)
@@ -91,6 +69,7 @@ CREATE TABLE {{ $modelName }} (
         FOREIGN KEY(deleted_by)
             REFERENCES {{ .Owner }}s(id)
             ON DELETE CASCADE
+    {{- end }}
 );
         {{- end }}
     {{- end }}
@@ -100,8 +79,8 @@ CREATE TABLE {{ $modelName }} (
 -- migrate:down
 {{- range .Databases }}
     {{- if eq .Type "postgres" }}
-        {{- range $modelName, $model := .Models }}
-DROP TABLE {{ $modelName }};
+        {{- range $index, $model := .Models }}
+DROP TABLE {{ $model.Name }};
         {{- end }}
     {{- end }}
 {{- end }}

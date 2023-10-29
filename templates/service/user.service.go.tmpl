@@ -3,7 +3,6 @@ package user
 import (
 	"context"
 	"log"
-	"{{ .ModuleName }}/api/gen"
 	"{{ .ModuleName }}/db/postgres/dbgen"
 )
 
@@ -40,7 +39,6 @@ func NewService(
 	}
 }
 
-// Support for Internal use cases
 func (s *service) CreateUser(ctx context.Context, params CreateUserParams) (*dbgen.User, error) {
 	res, err := s.repo.Create(
 		ctx,
@@ -61,6 +59,16 @@ func (s *service) CreateUser(ctx context.Context, params CreateUserParams) (*dbg
 	return res, nil
 }
 
+func (s *service) FindByUsername(ctx context.Context, username string) (*dbgen.User, error) {
+	res, err := s.repo.FindByUsername(ctx, username)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	return res, nil
+}
+
+/*
 func (s *service) UpdateUser(ctx context.Context, params UpdateUserParams) (*dbgen.User, error) {
 	res, err := s.repo.Update(
 		ctx,
@@ -95,3 +103,4 @@ func (s *service) DeleteUser(ctx context.Context, id int64) error {
 
 	return nil
 }
+*/

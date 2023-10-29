@@ -4,7 +4,7 @@
     {{- if eq .Type "postgres" }}
         {{- template "partial.query.user.sql.tmpl"}}
 
-        {{- range $modelName, $model := .Models }}
+        {{- range $index, $model := .Models }}
             {{- template "partial.query.model.sql.tmpl" $model }}
         {{- end }}
 

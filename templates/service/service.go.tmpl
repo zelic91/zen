@@ -2,11 +2,9 @@ package {{ .CurrentPackage }}
 
 import (
 	"context"
-	"log"
+	
 	"{{ .ModuleName }}/api/gen"
-{{- if eq (index .ServiceDatabaseMap .CurrentServiceName).Type "postgres" }}
-	"{{ .ModuleName }}/db/postgres/dbgen"
-{{- end }}
+	"{{ .ModuleName }}/common"
 )
 
 type Create{{ .CurrentModelName | singularize | title }}Params struct {
@@ -44,9 +42,9 @@ func NewService(
 	}
 }
 
-// Support for basic CRUDs use cases
-func (s *service) Create{{ .CurrentModelName | singularize | title }}(ctx context.Context, params *gen.Create{{ .CurrentModelName | singularize | title }}) (*gen.Create{{ .CurrentModelName | singularize | title }}ResponseBody, error) {
-	/* res, err := s.repo.Create(
+/* For reference
+func (s *service) Create{{ .CurrentModelName | singularize | title }}(ctx context.Context, params *gen.Create{{ .CurrentModelName | singularize | title }}) (*gen.Create{{ .CurrentModelName | singularize | title }}Response, error) {
+	res, err := s.repo.Create(
 		ctx,
 	{{- range $propertyName, $property := .CurrentModel.Properties }}
 		params.{{ $propertyName | camelcase }},
@@ -65,13 +63,13 @@ func (s *service) Create{{ .CurrentModelName | singularize | title }}(ctx contex
 
 	return &gen.Create{{ .CurrentModelName | singularize | title }}ResponseBody{
 		// TODO: Implement this
-	}, nil */
+	}, nil
 
 	return nil, nil
 }
 
-func (s *service) Update{{ .CurrentModelName | singularize | title }}(ctx context.Context, id int64, params *gen.Update{{ .CurrentModelName | singularize | title }}) (*gen.Update{{ .CurrentModelName | singularize | title }}ResponseBody, error) {
-	/* res, err := s.repo.Update(
+func (s *service) Update{{ .CurrentModelName | singularize | title }}(ctx context.Context, id int64, params *gen.Update{{ .CurrentModelName | singularize | title }}) (*gen.Update{{ .CurrentModelName | singularize | title }}Response, error) {
+	res, err := s.repo.Update(
 		ctx,
 		id,
 	{{- range $propertyName, $property := .CurrentModel.Properties }}
@@ -91,15 +89,18 @@ func (s *service) Update{{ .CurrentModelName | singularize | title }}(ctx contex
 
 	return &gen.Update{{ .CurrentModelName | singularize | title }}ResponseBody{
 		// TODO: Implement this
-	}, nil */
+	}, nil
 
 	return nil, nil
 }
+*/
 
-// Support for extra implementations
-{{- range $methodName, $method := .CurrentService.Methods }}
-func (s *service) {{ $methodName }}(ctx context.Context,{{- range .Arguments }}{{ .Name }} {{ .Type }}, {{- end }}) {{- if gt (len .Returns) 0 }}({{- range .Returns }}{{ . }} ,{{- end }}error){{- else }}error{{- end }} {
-	
+{{- range $service, $apiPaths := .ServiceOperationMap}}
+	{{- if eq $service $.CurrentService.Name }}
+		{{- range $apiPaths }}
+func (s *service) {{ .OperationID }}(ctx context.Context{{- if eq .Security "BearerAuth"}}, user *common.AuthUser{{- end }}{{- if .RequestBody }}, body *gen.{{ .RequestBody }}{{- end }}) (*gen.{{ .ResponseBody }}, error) {
 	return nil, nil
 }
+		{{- end}}
+	{{- end }}
 {{- end }}
