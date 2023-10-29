@@ -26,10 +26,20 @@ type Command struct {
 
 type Database struct {
 	Type   string
-	Models map[string]Model
+	Models []Model
+}
+
+func (db Database) ModelWithName(name string) *Model {
+	for _, model := range db.Models {
+		if model.Name == name {
+			return &model
+		}
+	}
+	return nil
 }
 
 type Model struct {
+	Name       string `yaml:"name"`
 	Type       string
 	Owner      string
 	SearchBy   []string `yaml:"searchBy"`

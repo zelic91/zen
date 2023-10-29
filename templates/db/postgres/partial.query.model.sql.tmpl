@@ -1,0 +1,61 @@
+{{- define "partial.query.model.sql.tmpl" }}
+
+-- {{ .Name | title }}
+-- name: Find{{ .Name | singularize | title }}ById :one
+SELECT * FROM {{ .Name }}
+WHERE id = $1 LIMIT 1;
+
+-- name: FindAll{{ .Name | title }} :many
+SELECT * FROM {{ .Name }}
+ORDER BY created_at;
+
+{{- range .SearchBy }}
+
+-- name: Find{{ .Name | title }}By{{ . | title }} :many
+SELECT * FROM {{ .Name }}
+WHERE {{ . }} LIKE '%' || $1 || '%'
+ORDER BY created_at
+LIMIT $2
+OFFSET $3;
+{{- end }}
+
+-- name: Create{{ .Name | singularize | title }} :one
+INSERT INTO {{ .Name }} (
+    {{- range $propertyName, $property := .Properties }}
+    {{ $propertyName }},
+    {{- end }}
+    created_by,
+    updated_by,
+    deleted_by,
+    created_at,
+    updated_at,
+    deleted_at
+) VALUES (
+    {{- range loop 1 (len .Properties | add 3) }}
+    ${{ . }},
+    {{- end }}
+    NOW(),
+    NOW(),
+    NOW()
+)
+RETURNING *;
+
+-- name: Update{{ .Name | singularize | title }} :one
+UPDATE {{ .Name }}
+SET 
+    {{- with $i := 2 }}
+        {{- range $propertyName, $property := $.Properties }}
+    {{ $propertyName }} = ${{ $i }},
+            {{- $i = add $i 1}}
+        {{- end }}
+    updated_by = ${{ $i }},
+    {{- end }}
+    updated_at = NOW()
+WHERE id = $1
+RETURNING *;
+
+-- name: Delete{{ .Name | singularize | title }} :exec
+DELETE FROM {{ .Name }}
+WHERE id = $1;
+
+{{- end }}

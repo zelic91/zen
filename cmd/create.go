@@ -200,7 +200,11 @@ func generateDatabases(
 				packageName := strings.ToLower(serviceName)
 				config.CurrentPackage = packageName
 				config.CurrentModelName = config.Services[serviceName].Model
-				config.CurrentModel = database.Models[config.CurrentModelName]
+				model := database.ModelWithName(config.CurrentModelName)
+				if model == nil {
+					continue
+				}
+				config.CurrentModel = *model
 				generateSpecific(
 					outputPath+"/"+strings.ToLower(packageName)+"/model.go",
 					rootTemplatePath+"/db/mongo/model.go.tmpl",
@@ -264,7 +268,11 @@ func generateServices(
 		database := serviceDatabaseMap[serviceName]
 
 		config.CurrentModelName = service.Model
-		config.CurrentModel = database.Models[config.CurrentModelName]
+		model := database.ModelWithName(config.CurrentModelName)
+		if model == nil {
+			continue
+		}
+		config.CurrentModel = *model
 
 		if database.Type == "postgres" {
 			generateSpecific(
@@ -328,6 +336,11 @@ func generateGeneric(
 	))
 
 	for _, tmpl := range templates.Templates() {
+		// We are not gonna generate the partials into files
+		if strings.HasPrefix(tmpl.Name(), "partial") {
+			continue
+		}
+
 		strippedOutFileName := strings.TrimSuffix(templateMap[tmpl.Name()], ".tmpl")
 		outFileName := fmt.Sprintf("%s/%s", outputPath, strippedOutFileName)
 
