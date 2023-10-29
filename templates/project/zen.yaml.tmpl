@@ -1,0 +1,215 @@
+moduleName: {{ .ModuleName }}
+title: Test Gen
+description: Sample configuration for gen
+env:
+  JWT_KEY:
+    structName: JWTKey
+    type: string
+  PORT:
+    type: int
+  POSTGRES_URL:
+    structName: PostgresURL
+    type: string
+    defaultValue: postgres://postgres:postgres@localhost:5432/testgen?sslmode=disable
+  MONGO_URL:
+    structName: MongoURL
+    type: string
+  MONGO_DATABASE:
+    structName: MongoDatabase
+    type: string
+
+commands:
+  server:
+    type: api
+  websocket:
+    type: websocket
+  crawler:
+    type: worker
+
+databases:
+  postgres:
+    type: postgres
+    models:
+      - name: devices
+        type: data
+        owner: user
+        findBy:
+          - deviceToken
+        properties:
+          platform:
+            type: string
+          device_token:
+            type: string
+          status:
+            type: string
+
+  mongo:
+    type: mongo
+    models:
+      - name: users
+        type: user
+        owner: admin
+        searchBy:
+          - username
+          - email
+      - name: devices
+        type: data
+        owner: user
+        properties:
+          platform:
+            type: string
+          device_token:
+            type: string
+          status:
+            type: string
+
+api:
+  title: Main API
+  description: Main API Description
+  paths:
+    /auth/signin:
+      post:
+        summary: Sign in
+        security: ApiKeyAuth
+        service: Auth
+        operationId: SignIn
+        requestBody: SignInRequest
+        successResponse: 200
+        responseBody: AuthResponse
+
+    /auth/signup:
+      post:
+        summary: Sign up
+        security: ApiKeyAuth
+        service: Auth
+        operationId: SignUp
+        requestBody: SignUpRequest
+        successResponse: 200
+        responseBody: AuthResponse
+
+    /devices:
+      post:
+        summary: Register new device token
+        security: BearerAuth
+        service: Device
+        operationId: CreateDevice
+        requestBody: CreateDevice
+        successResponse: 201
+        responseBody: DefaultResponse
+
+    /users:
+      post:
+        summary: Create new user
+        security: BearerAuth
+        service: User
+        operationId: CreateUser
+        requestBody: CreateUser
+        successResponse: 201
+        responseBody: CreateUserResponseBody
+
+      put:
+        summary: Update a user
+        security: BearerAuth
+        service: User
+        operationId: UpdateUser
+        requestBody: UpdateUser
+        successResponse: 201
+        responseBody: UpdateUserResponseBody
+
+  schemas:
+    SignInRequest:
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    SignUpRequest:
+      required:
+        - username
+        - password
+        - password_confirmation
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        password_confirmation:
+          type: string
+
+    CreateDevice:
+      required:
+        - deviceToken
+        - platform
+      properties:
+        deviceToken:
+          type: string
+        platform:
+          type: string
+
+    CreateUser:
+      required:
+        - username
+        - password
+        - email
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+
+    UpdateUser:
+      properties:
+        password:
+          type: string
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+
+    CreateUserResponseBody:
+      required:
+        - username
+        - email
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+
+    UpdateUserResponseBody:
+      required:
+        - username
+        - email
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+
+    User:
+      required:
+        - username
+        - email
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+
+services:
+  Device:
+    type: model
+    database: postgres
+    model: devices
