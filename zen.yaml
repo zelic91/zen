@@ -43,6 +43,13 @@ databases:
             type: string
           status:
             type: string
+      - name: object
+        type: data
+        properties:
+          title:
+            type: string
+          content:
+            type: string
 
   mongo:
     type: mongo

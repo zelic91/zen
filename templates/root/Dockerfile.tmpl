@@ -1,0 +1,19 @@
+FROM golang:alpine AS builder
+RUN apk add --no-cache tzdata
+RUN apk --update add ca-certificates
+
+WORKDIR /go/src/app
+
+COPY . .
+RUN go get -d -v ./...
+RUN go install -v ./...
+
+#==============
+FROM scratch
+
+WORKDIR /app
+COPY --from=builder /go/bin /app
+
+EXPOSE 3000
+
+ENTRYPOINT [ "/app/{{ .ModuleName }}", "server"]
