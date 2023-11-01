@@ -54,7 +54,7 @@ CREATE TABLE {{ $model.Name }} (
     deleted_by BIGSERIAL,
     created_at TIMESTAMP,
     updated_at TIMESTAMP,
-    deleted_at TIMESTAMP,
+    deleted_at TIMESTAMP{{- if .Owner }},{{- end }}
 
     {{- if .Owner}}
     CONSTRAINT fk_created_by_{{ .Owner }}
