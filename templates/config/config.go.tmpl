@@ -27,7 +27,7 @@ func Init() *Config {
 	err := viper.ReadInConfig()
 
 	if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-		log.Fatalf("cannot init config %v", err)
+		log.Printf("No .env file found. Using ENV instead.")
 	}
 
 	conf := &Config{}
