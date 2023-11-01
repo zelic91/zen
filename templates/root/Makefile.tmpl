@@ -14,6 +14,9 @@ dep:
 
 migrate:
 	dbmate -u $(DATABASE_URL) -d ./db/postgres/migrations -s ./db/postgres/schema.sql up
+	
+rollback:
+	dbmate -u $(DATABASE_URL) -d ./db/postgres/migrations -s ./db/postgres/schema.sql down
 
 apigen:
 	rm -rf api/gen
@@ -50,5 +53,8 @@ docker:
 		-p 3000:3000 \
 		--name {{ .ModuleName }} {{ .ModuleName }}
 
+test_api:
+	curl localhost:3000/api/v1/auth/signup -X POST -H 'Content-Type: application/json' -d '{"username":"tester", "password":"123123123", "password_confirmation":"123123123"}'
+	curl localhost:3000/api/v1/auth/signin -X POST -H 'Content-Type: application/json' -d '{"username":"tester", "password":"123123123"}'
 
 .PHONY: init dev prepdev apigen toolsup toolsdown gen docker dbgen_mongo dbgen_postgres
