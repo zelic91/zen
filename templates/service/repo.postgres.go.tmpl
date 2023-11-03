@@ -45,13 +45,8 @@ func (r Repo) Create(
 {{- end }}
 ) (*dbgen.{{ .CurrentModelName | singularize | title }}, error) {
 	params := dbgen.Create{{ .CurrentModelName | singularize | title }}Params{
-	{{- if eq .CurrentModel.Type "user" }}
-		{{- range $propertyName, $property := userProperties }}
-		{{ $propertyName | camelcase | title }}: {{- if $property.NotNull}}{{ $propertyName | camelcase | untitle }}{{- else }}postgres.ToNullString({{ $propertyName | camelcase | untitle }}){{- end }},
-		{{- end }}
-	{{- end }}
 	{{- range $propertyName, $property := .CurrentModel.Properties }}
-		{{ $propertyName | camelcase | title }}: {{- if $property.NotNull}}{{ $propertyName | camelcase | untitle }}{{- else }}postgres.ToNullString({{ $propertyName | camelcase | untitle }}){{- end }},
+		{{ $propertyName | camelcase | title | structFieldName }}: {{- if $property.NotNull }}{{ $propertyName | camelcase | untitle }}{{- else }}postgres.ToNull{{ .Type | title }}({{ $propertyName | camelcase | untitle }}){{- end }},
 	{{- end }}
 	}
 
@@ -72,13 +67,8 @@ func (r Repo) Update(
 ) (*dbgen.{{ .CurrentModelName | singularize | title }}, error) {
 	params := dbgen.Update{{ .CurrentModelName | singularize | title }}Params{
 	ID: id,
-	{{- if eq .CurrentModel.Type "user" }}
-		{{- range $propertyName, $property := userProperties }}
-		{{ $propertyName | camelcase | title }}: {{- if $property.NotNull}}{{ $propertyName | camelcase | untitle }}{{- else }}postgres.ToNullString({{ $propertyName | camelcase | untitle }}){{- end }},
-		{{- end }}
-	{{- end }}
 	{{- range $propertyName, $property := .CurrentModel.Properties }}
-		{{ $propertyName | camelcase | title }}: {{- if $property.NotNull}}{{ $propertyName | camelcase | untitle }}{{- else }}postgres.ToNullString({{ $propertyName | camelcase | untitle }}){{- end }},
+		{{ $propertyName | camelcase | title | structFieldName }}: {{- if $property.NotNull}}{{ $propertyName | camelcase | untitle }}{{- else }}postgres.ToNullString({{ $propertyName | camelcase | untitle }}){{- end }},
 	{{- end }}
 	}
 

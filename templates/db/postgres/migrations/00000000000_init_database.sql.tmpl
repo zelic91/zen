@@ -54,7 +54,17 @@ CREATE TABLE {{ $model.Name }} (
     deleted_by BIGSERIAL,
     created_at TIMESTAMP,
     updated_at TIMESTAMP,
-    deleted_at TIMESTAMP{{- if .Owner }},{{- end }}
+    deleted_at TIMESTAMP{{- if or (hasReferences .Properties) .Owner }},{{- end }}
+
+    {{- if hasReferences .Properties }}
+        {{ $references := references .Properties }}
+        {{- range $propertyName, $property := $references }}
+    CONSTRAINT fk_{{ $propertyName }}
+        FOREIGN KEY({{ $propertyName }})
+            REFERENCES {{ .References }}
+            ON DELETE CASCADE{{- if not (isLastInMap $propertyName $references) }},{{- end }}
+        {{- end }}{{- if .Owner}},{{- end }}
+    {{- end }}
 
     {{- if .Owner}}
     CONSTRAINT fk_created_by_{{ .Owner }}

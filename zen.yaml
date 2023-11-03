@@ -43,13 +43,27 @@ databases:
             type: string
           status:
             type: string
-      - name: object
+
+      - name: categories
+        type: data
+        properties:
+          title:
+            type: string
+          description:
+            type: string
+            
+      - name: objects
         type: data
         properties:
           title:
             type: string
           content:
             type: string
+          category_id:
+            type: int64
+            notNull: true
+            references: categories(id)
+      
 
   mongo:
     type: mongo
@@ -105,6 +119,67 @@ api:
         successResponse: 201
         responseBody: DefaultResponse
 
+    /objects:
+      post:
+        summary: Create a new object
+        security: BearerAuth
+        service: Object
+        operationId: CreateObject
+        requestBody: CreateObject
+        successResponse: 201
+        responseBody: DefaultResponse
+
+      get:
+        summary: Get all objects
+        security: BearerAuth
+        service: Object
+        operationId: GetObjects
+        successResponse: 200
+        responseBody: GetObjectsBody
+
+    /categories:
+      post:
+        summary: Create a new category
+        security: BearerAuth
+        service: Category
+        operationId: CreateCategory
+        requestBody: CreateCategory
+        successResponse: 201
+        responseBody: DefaultResponse
+
+      get:
+        summary: Get all categories
+        security: BearerAuth
+        service: Category
+        operationId: GetCategories
+        successResponse: 200
+        responseBody: GetCategoriesBody
+
+    # /objects/{id}:
+    #   get:
+    #     summary: Get a specific object
+    #     security: BearerAuth
+    #     service: Object
+    #     operationId: GetObject
+    #     successResponse: 200
+    #     responseBody: GetObjectBody
+      
+    #   put:
+    #     summary: Update an object
+    #     security: BearerAuth
+    #     service: Object
+    #     operationId: UpdateObject
+    #     successResponse: 200
+    #     responseBody: DefaultResponse
+
+    #   delete:
+    #     summary: Delete an object
+    #     security: BearerAuth
+    #     service: Object
+    #     operationId: DeleteObject
+    #     successResponse: 200
+    #     responseBody: DefaultResponse
+
   schemas:
     SignInRequest:
       required:
@@ -138,6 +213,34 @@ api:
           type: string
         platform:
           type: string
+    
+    CreateObject:
+      required:
+        - title
+        - content
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+
+    GetObjectsBody:
+
+    GetObjectBody:
+
+    GetCategoriesBody:
+
+    GetCategoryBody:
+
+    CreateCategory:
+      required:
+        - title
+        - description
+      properties:
+        title:
+          type: string
+        description:
+          type: string
 
     User:
       required:
@@ -154,3 +257,19 @@ services:
     type: model
     database: postgres
     model: devices
+
+  - name: Object
+    type: model
+    database: postgres
+    model: objects
+  
+  - name: Category
+    type: model
+    database: postgres
+    model: categories
+
+deployment:
+  host: zeliclabs.com
+  email: thuong@zeliclabs.com
+  secretName: zeliclabs-sample-secret
+  dockerHubUsername: zelic91

@@ -9,24 +9,14 @@ import (
 
 type Create{{ .CurrentModelName | singularize | title }}Params struct {
 	{{- range $propertyName, $property := .CurrentModel.Properties }}
-	{{ $propertyName | camelcase }} {{- if .NotNull }}{{ .Type }}{{- else }}*{{ .Type }}{{- end }}
-	{{- end }}
-	{{- if eq .CurrentModel.Type "user" }}
-		{{- range $propertyName, $property := userProperties }}
-	{{ $propertyName | camelcase }} {{- if .NotNull }} {{ .Type }}{{- else }}*{{ .Type }}{{- end }}
-		{{- end }}
+	{{ $propertyName | camelcase | title | structFieldName }}{{- if .NotNull }} {{ .Type }}{{- else }}*{{ .Type }}{{- end }}
 	{{- end }}
 }
 
 type Update{{ .CurrentModelName | singularize | title }}Params struct {
 	ID int64
 	{{- range $propertyName, $property := .CurrentModel.Properties }}
-	{{ $propertyName | camelcase }} {{- if .NotNull }} {{ .Type }}{{- else }}*{{ .Type }}{{- end }}
-	{{- end }}
-	{{- if eq .CurrentModel.Type "user" }}
-		{{- range $propertyName, $property := userProperties }}
-	{{ $propertyName | camelcase }} {{- if .NotNull }} {{ .Type }}{{- else }}*{{ .Type }}{{- end }}
-		{{- end }}
+	{{ $propertyName | camelcase | title | structFieldName }}{{- if .NotNull }} {{ .Type }}{{- else }}*{{ .Type }}{{- end }}
 	{{- end }}
 }
 

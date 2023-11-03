@@ -9,11 +9,15 @@ import (
 
 func FuncMap() template.FuncMap {
 	return map[string]interface{}{
-		"pluralize":      Pluralize,
-		"singularize":    Singularize,
-		"userProperties": UserProperties,
-		"loop":           Loop,
-		"sqlType":        SQLType,
+		"pluralize":       Pluralize,
+		"singularize":     Singularize,
+		"userProperties":  UserProperties,
+		"loop":            Loop,
+		"sqlType":         SQLType,
+		"hasReferences":   HasReferences,
+		"references":      References,
+		"isLastInMap":     IsLastInMap,
+		"structFieldName": StructFieldName,
 	}
 }
 
@@ -74,7 +78,44 @@ func SQLType(goType string) string {
 	switch goType {
 	case "string":
 		ret = "VARCHAR"
+	case "int64":
+		ret = "BIGSERIAL"
 	}
 
 	return ret
+}
+
+func HasReferences(properties map[string]config.ModelProperty) bool {
+	for _, value := range properties {
+		if value.References != "" {
+			return true
+		}
+	}
+
+	return false
+}
+
+func References(properties map[string]config.ModelProperty) map[string]config.ModelProperty {
+	out := map[string]config.ModelProperty{}
+	for key, value := range properties {
+		if value.References != "" {
+			out[key] = value
+		}
+	}
+	return out
+}
+
+func IsLastInMap(key string, m map[string]config.ModelProperty) bool {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return keys[len(keys)-1] == key
+}
+
+func StructFieldName(fieldName string) string {
+	if strings.HasSuffix(fieldName, "Id") {
+		return strings.TrimRight(fieldName, "Id") + "ID"
+	}
+	return fieldName
 }

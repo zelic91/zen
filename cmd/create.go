@@ -79,6 +79,12 @@ func create(configFile string, outputDir string) {
 	// Generate other services
 	generateServices(outputDir, config)
 
+	// Generate config for debugging with VSCode
+	generateDebugConfig(outputDir, config)
+
+	// Generate k8s deployment manifests
+	generateDeployment(outputDir, config)
+
 	log.Println("🍺🍺🍺 DONE.")
 }
 
@@ -296,6 +302,26 @@ func generateServices(
 			config,
 		)
 	}
+}
+
+func generateDebugConfig(
+	outputPath string,
+	config *c.Config,
+) {
+	generateSpecific(
+		outputPath+"/.vscode/launch.json",
+		rootTemplatePath+"/vscode/launch.json.tmpl",
+		config,
+	)
+}
+
+func generateDeployment(outputPath string,
+	config *c.Config) {
+	generateGeneric(
+		outputPath+"/deployment",
+		rootTemplatePath+"/deployment",
+		config,
+	)
 }
 
 // This method should be general enough to be reused

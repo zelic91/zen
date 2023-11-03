@@ -17,6 +17,7 @@ type Config struct {
 	CurrentService      Service
 	ServiceOperationMap map[string][]ApiPath
 	ServiceDatabaseMap  map[string]Database
+	Deployment          Deployment
 }
 
 func (c Config) ServiceWithName(name string) *Service {
@@ -59,7 +60,7 @@ type Model struct {
 type ModelProperty struct {
 	Type       string
 	Owner      string
-	NotNull    bool `yaml:"notNull"`
+	NotNull    bool `default:"true" yaml:"notNull"`
 	References string
 	Unique     bool
 }
@@ -124,4 +125,11 @@ type Schema struct {
 
 type SchemaProperty struct {
 	Type string
+}
+
+type Deployment struct {
+	Host              string
+	Email             string
+	SecretName        string `yaml:"secretName"`
+	DockerHubUsername string `yaml:"dockerHubUsername"`
 }

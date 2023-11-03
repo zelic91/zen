@@ -1,7 +1,8 @@
 zen
 deployment.yaml
+!templates/deployment/*
 Dockerfile
 .github
-deployment
+./deployment
 .DS_Store
 testgen
