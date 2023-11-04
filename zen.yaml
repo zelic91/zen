@@ -269,8 +269,9 @@ services:
     model: categories
 
 deployment:
-  host: zeliclabs.com
+  host: sample-subdomain.zeliclabs.com
   email: thuong@zeliclabs.com
   secretName: zeliclabs-sample-secret
   dockerHubUsername: zelic91
   dockerHubRepo: zen-sample
+  targetPort: 3000

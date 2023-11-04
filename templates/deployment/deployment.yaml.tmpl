@@ -17,4 +17,12 @@ spec:
         imagePullPolicy: Always
         name: {{ .ModuleName }}
         ports:
-        - containerPort: 3000
+          - containerPort: 3000
+        env:
+        {{- range $name, $value := .Env }}
+          - name: {{ $name }}
+            valueFrom:
+              configMapKeyRef:
+                name: {{ $.ModuleName }}-config
+                key: {{ $name }}
+        {{- end }}

@@ -97,6 +97,7 @@ type Env struct {
 	StructName   string `yaml:"structName"`
 	Type         string
 	DefaultValue string `yaml:"defaultValue"`
+	Secret       bool
 }
 
 type Api struct {
@@ -133,4 +134,5 @@ type Deployment struct {
 	SecretName        string `yaml:"secretName"`
 	DockerHubUsername string `yaml:"dockerHubUsername"`
 	DockerHubRepo     string `yaml:"dockerHubRepo"`
+	TargetPort        string `yaml:"targetPort"`
 }

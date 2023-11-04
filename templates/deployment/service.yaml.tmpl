@@ -5,7 +5,7 @@ metadata:
 spec:
   ports:
   - port: 80
-    targetPort: 80
+    targetPort: {{ .Deployment.TargetPort }}
     protocol: TCP
   selector:
     app: {{ .ModuleName }}
