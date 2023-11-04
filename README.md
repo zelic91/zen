@@ -16,9 +16,14 @@ In order to run all Go binaries globally, you need to include `/go/bin` in the P
 export PATH="$GOPATH/bin:$PATH"
 ```
 
+## Usage
+1. Create a new project with `zen new <project-name>`. This command will create a new folder and a sample YAML config file.
+2. Edit the `zen.yaml` file.
+3. Generate configs and stubs with `zen run`.
+4. Edit the according configs in the generated files where appropriates and follow the instructions in generated `README.md` file.
+5. Profit!!!
+
 ## TODO
-- [ ] Add deployment manifests to support k8s.
-- [ ] Add Github Actions workflow.
 - [ ] Add the ability to check for existing package/file and only generate if missing.
 
 ## Notes
