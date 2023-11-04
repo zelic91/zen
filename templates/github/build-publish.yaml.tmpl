@@ -29,7 +29,7 @@ jobs:
           context: ./
           file: ./Dockerfile
           push: true
-          tags: ${{`{{ secrets.DOCKER_HUB_USERNAME }}`}}/{{ .Deployment.DockerHubRepo }}:${{`{{ github.event.release.tag_name }}`}}
+          tags: ${{`{{ secrets.DOCKER_HUB_USERNAME }}`}}/{{ .Deployment.DockerHubRepo }}:${{`{{ github.event.release.tag_name }}`}}, ${{`{{ secrets.DOCKER_HUB_USERNAME }}`}}/{{ .Deployment.DockerHubRepo }}:latest
 
       - name: Image digest
         run: echo ${{`{{ steps.docker_build.outputs.digest }}`}}
