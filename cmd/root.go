@@ -7,6 +7,7 @@ import (
 	"embed"
 	"os"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
@@ -24,16 +25,19 @@ var rootCmd = &cobra.Command{
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
-		println(`
+		color.Set(color.FgGreen)
+		print(`
 ::::::::: :::::::::: ::::    ::: 
      :+:  :+:        :+:+:   :+: 
     +:+   +:+        :+:+:+  +:+ 
    +#+    +#++:++#   +#+ +:+ +#+ 
   +#+     +#+        +#+  +#+#+# 
  #+#      #+#        #+#   #+#+# 
-######### ########## ###    #### 
-		`)
-		println("zen " + version)
+######### ########## ###    #### `)
+		color.Set(color.FgHiMagenta)
+		println("v" + version)
+		color.Unset()
+		println("Generate configs and stubs for your next backend service.")
 	},
 }
 
