@@ -43,7 +43,7 @@ var runCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(runCmd)
 	runCmd.Flags().StringP("config", "c", "zen.yaml", "YAML config for zen")
-	runCmd.Flags().StringP("to", "t", "", "Destination for generated files")
+	runCmd.Flags().StringP("to", "t", ".", "Destination for generated files")
 }
 
 func create(configFile string, outputDir string) {
