@@ -12,18 +12,17 @@ import (
 
 // newCmd represents the new command
 var newCmd = &cobra.Command{
-	Use:   "new",
+	Use:   "new [project-name]",
 	Short: "Create new backend service project",
 	Long:  `This command will only create a new directory with a sample zen.yaml file to start with.`,
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		name, _ := cmd.Flags().GetString("name")
-		new(name)
+		new(args[0])
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(newCmd)
-	newCmd.Flags().StringP("name", "n", "testgen", "Create new backend service project.")
 }
 
 func new(name string) {

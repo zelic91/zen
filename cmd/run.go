@@ -28,8 +28,8 @@ import (
 // - root: all necessary files for the project roots: Makefile, sample env, etc.
 const rootTemplatePath = "templates"
 
-var createCmd = &cobra.Command{
-	Use:   "create",
+var runCmd = &cobra.Command{
+	Use:   "run -c [config-file] -t [target-folder]",
 	Short: "Create a new service based on YAML config",
 	Long:  `Create a new service based on YAML config`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -41,9 +41,9 @@ var createCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(createCmd)
-	createCmd.Flags().StringP("config", "c", "zen.yaml", "YAML config for zen")
-	createCmd.Flags().StringP("to", "t", "testgen", "Destination for generated files")
+	rootCmd.AddCommand(runCmd)
+	runCmd.Flags().StringP("config", "c", "zen.yaml", "YAML config for zen")
+	runCmd.Flags().StringP("to", "t", "", "Destination for generated files")
 }
 
 func create(configFile string, outputDir string) {

@@ -36,7 +36,7 @@ var goserviceCmd = &cobra.Command{
 const templatePath = "templates/goservice"
 
 func init() {
-	createCmd.AddCommand(goserviceCmd)
+	runCmd.AddCommand(goserviceCmd)
 	goserviceCmd.Flags().StringVarP(&moduleName, "module", "m", "github.com/zelic91/app", "Module name of the service")
 	goserviceCmd.Flags().StringVarP(&directory, "directory", "d", ".", "Target directory")
 
