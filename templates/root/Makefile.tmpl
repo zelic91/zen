@@ -6,6 +6,9 @@ init:
 	go get -u github.com/spf13/viper
 	cp env.example .env
 	mv gitignore .gitignore
+	chmod +x deployment/gen_cert.sh
+	chmod +x deployment/deploy.sh
+	cd deployment && sh gen_cert.sh
 
 dep:
 	brew install dbmate
