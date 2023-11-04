@@ -85,6 +85,9 @@ func create(configFile string, outputDir string) {
 	// Generate k8s deployment manifests
 	generateDeployment(outputDir, config)
 
+	// Generate GitHub workflows
+	generateGitHubWorkflow(outputDir, config)
+
 	log.Println("🍺🍺🍺 DONE.")
 }
 
@@ -320,6 +323,17 @@ func generateDeployment(outputPath string,
 	generateGeneric(
 		outputPath+"/deployment",
 		rootTemplatePath+"/deployment",
+		config,
+	)
+}
+
+func generateGitHubWorkflow(
+	outputPath string,
+	config *c.Config,
+) {
+	generateGeneric(
+		outputPath+"/.github/workflows",
+		rootTemplatePath+"/github",
 		config,
 	)
 }

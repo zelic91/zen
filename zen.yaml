@@ -273,3 +273,4 @@ deployment:
   email: thuong@zeliclabs.com
   secretName: zeliclabs-sample-secret
   dockerHubUsername: zelic91
+  dockerHubRepo: zen-sample

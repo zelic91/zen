@@ -132,4 +132,5 @@ type Deployment struct {
 	Email             string
 	SecretName        string `yaml:"secretName"`
 	DockerHubUsername string `yaml:"dockerHubUsername"`
+	DockerHubRepo     string `yaml:"dockerHubRepo"`
 }
