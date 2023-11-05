@@ -6,13 +6,15 @@ package cmd
 import (
 	"embed"
 	"os"
+	"text/template"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
 var (
-	RootFs embed.FS
+	RootFs    embed.FS
+	templates *template.Template
 )
 
 const version = "1.0.6"
