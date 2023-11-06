@@ -1,0 +1,182 @@
+package cmd
+
+import (
+	"context"
+	"{{ .ModuleName }}/config"
+	"{{ .ModuleName }}/db/postgres"
+{{- range $index, $target := .Crawler.Targets }}
+	"{{ $.ModuleName }}/{{ .Service | snakecase }}"
+{{- end }}
+	"os"
+	"os/signal"
+	"strings"
+	"time"
+
+	"github.com/antchfx/htmlquery"
+	"github.com/labstack/gommon/log"
+	"github.com/spf13/cobra"
+	"golang.org/x/net/html"
+)
+
+const (
+	sleepTime   = {{ .Crawler.SleepTime }}
+	workerCount = {{ .Crawler.WorkerCount }}
+	baseURL     = "{{ .Crawler.BaseURL }}"
+)
+
+// crawlerCmd represents the crawler command
+var crawlerCmd = &cobra.Command{
+	Use:   "crawler",
+	Short: "Start the crawler",
+	Long:  `Start the crawler`,
+	Run:   RunCrawler,
+}
+
+func init() {
+	rootCmd.AddCommand(crawlerCmd)
+}
+
+{{- range $index, $target := .Crawler.Targets }}
+type {{ .Name }} struct {
+	{{- range $index, $property := .Properties }}
+    {{ .Name | title }} {{ .Type }}
+    {{- end }}    
+}
+{{- end }}
+
+func crawl(
+    worker int, 
+    url string, 
+    urlChannel chan string, 
+    {{- range $index, $target := .Crawler.Targets }}
+    target{{ .Name }}Channel chan {{ .Name }},
+    {{- end }}
+) {
+	log.Printf("crawling %s", url)
+	doc, err := htmlquery.LoadURL(url)
+	if err != nil {
+		log.Errorf("error loading url: %s %v", url, err)
+		return
+	}
+
+	go extractURLs(url, doc, urlChannel)
+    {{- range $index, $target := .Crawler.Targets }}
+	go extract{{ .Name }}(url, doc, target{{ .Name }}Channel)
+    {{- end }}
+}
+
+func extractURLs(
+    url string, 
+    doc *html.Node, 
+    urlChannel chan string,
+) {
+	urls := htmlquery.Find(doc, "//a[@href]")
+
+	if len(urls) == 0 {
+		log.Printf("no URL found for %s", url)
+		return
+	}
+
+	for _, node := range urls {
+		href := htmlquery.SelectAttr(node, "href")
+		if strings.HasPrefix(href, "/") {
+			href = baseURL + href
+		}
+		urlChannel <- href
+	}
+}
+
+{{- range $index, $target := .Crawler.Targets }}
+func extract{{ .Name }}(
+    url string, 
+    doc *html.Node,
+    targetChannel chan {{ .Name }},
+) {
+	println("Extracting {{ .Name }}")
+    
+    {{- range $index, $property := .Properties }}
+	{{ .Name }} := htmlquery.FindOne(doc, "{{ .XPath }}")
+    {{- end }}
+
+	// TODO: Perform validation for the properties
+
+	ret := {{ $target.Name }}{
+    {{- range $index, $property := .Properties }}
+		{{ .Name | title }}:   htmlquery.InnerText({{ .Name }}),
+	{{- end }}
+	}
+
+	targetChannel <- ret
+}
+{{- end }}
+
+func RunCrawler(cmd *cobra.Command, args []string) {
+	config := config.Init()
+	postgresDB := postgres.Init(config)
+
+    {{- range $index, $target := .Crawler.Targets }}
+	{{ .Name | untitle }}Repo := {{ .Name | untitle }}.NewRepo(postgresDB)
+	{{ .Name | untitle }}Service := {{ .Name | untitle }}.NewService(&{{ .Name | untitle }}Repo)
+    {{- end }}
+
+    // TODO: Start with something
+	startURL := baseURL + "/"
+
+	checked := map[string]bool{}
+	urlChannel := make(chan string, workerCount)
+    defer close(urlChannel)
+
+    {{- range $index, $target := .Crawler.Targets }}
+	target{{ .Name }}Channel := make(chan {{ .Name }})
+    defer close(target{{ .Name }}Channel)
+    {{- end }}
+
+	urlChannel <- startURL
+
+	go func() {
+		for {
+			for i := 0; i < workerCount; i++ {
+				url := <-urlChannel
+				if ok := checked[url]; ok {
+					println("already checked", url)
+					continue
+				}
+				go crawl(
+                    i+1, 
+                    url, 
+                    urlChannel, 
+                {{- range $index, $target := .Crawler.Targets }}
+                    target{{ .Name }}Channel,
+                {{- end }}
+                )
+				checked[url] = true
+				time.Sleep(sleepTime * time.Second)
+			}
+		}
+	}()
+
+    {{- range $index, $target := .Crawler.Targets }}
+	go func() {
+		for {
+			item := <-target{{ .Name }}Channel
+			println("Process item")
+			err := {{ .Name | untitle }}Service.Create{{ .Name }}Internal(
+                context.Background(), 
+                {{- range $index, $property := .Properties }}
+                item.{{ .Name | title }},
+                {{- end }}
+            )
+			if err != nil {
+				log.Errorf("cannot create {{ .Name }}: %v", err)
+			}
+		}
+	}()
+    {{- end }}
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+
+	log.Print("Shutting down")
+
+}

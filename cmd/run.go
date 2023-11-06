@@ -176,6 +176,12 @@ func generateCommands(
 				rootTemplatePath+"/cmd/command.api.go.tmpl",
 				config,
 			)
+		case "crawler":
+			generateSpecific(
+				outputPath+"/cmd/"+name+".go",
+				rootTemplatePath+"/cmd/command.crawler.go.tmpl",
+				config,
+			)
 		default:
 		}
 	}
@@ -276,6 +282,7 @@ func generateServices(
 	config *c.Config,
 ) {
 	serviceDatabaseMap := buildServiceDatabaseMap(config)
+	config.ServiceCrawlerTargetMap = buildServiceCrawlerTargetMap(config)
 	for _, service := range config.Services {
 		packageName := strings.ToLower(service.Name)
 		config.CurrentPackage = packageName
@@ -499,6 +506,23 @@ func buildServiceOperationMap(config *c.Config) map[string][]c.ApiPath {
 			}
 			ret[serviceName] = l
 		}
+	}
+
+	return ret
+}
+
+func buildServiceCrawlerTargetMap(config *c.Config) map[string][]c.CrawlerTarget {
+	ret := map[string][]c.CrawlerTarget{}
+
+	for _, target := range config.Crawler.Targets {
+		serviceName := target.Service
+		l := ret[serviceName]
+		if l == nil {
+			l = []c.CrawlerTarget{target}
+		} else {
+			l = append(l, target)
+		}
+		ret[serviceName] = l
 	}
 
 	return ret

@@ -25,7 +25,7 @@ commands:
   websocket:
     type: websocket
   crawler:
-    type: worker
+    type: crawler
 
 databases:
   postgres:
@@ -63,6 +63,16 @@ databases:
             type: int64
             notNull: true
             references: categories(id)
+
+      - name: articles
+        type: data
+        properties:
+          title:
+            type: string
+          content:
+            type: string
+          url:
+            type: string
       
 
   mongo:
@@ -252,6 +262,22 @@ api:
         email:
           type: string
 
+crawler:
+  sleepTime: 1
+  workerCount: 2
+  baseURL: https://example.com
+  targets:
+    - name: Article
+      service: Article
+      operationId: CreateArticleInternal
+      properties:
+        - name: title
+          type: string
+          xpath: /title
+        - name: content
+          type: string
+          xpath: /content
+
 services:
   - name: Device
     type: model
@@ -267,6 +293,11 @@ services:
     type: model
     database: postgres
     model: categories
+  
+  - name: Article
+    type: model
+    database: postgres
+    model: articles
 
 deployment:
   host: sample-subdomain.zeliclabs.com

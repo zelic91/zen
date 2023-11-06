@@ -63,6 +63,15 @@ databases:
             type: int64
             notNull: true
             references: categories(id)
+
+      - name: articles
+        properties:
+          url:
+            type: string
+          title:
+            type: string
+          content:
+            type: string
       
 
   mongo:
@@ -252,6 +261,20 @@ api:
         email:
           type: string
 
+crawler:
+  sleepTime: 1
+  workerCount: 2
+  baseURL: https://example.com
+  targets:
+    article:
+      service: Article
+      operationId: CreateArticleInternal
+      properties:
+        - name: title
+          xpath: /title
+        - name: content
+          xpath: /content
+
 services:
   - name: Device
     type: model
@@ -267,6 +290,11 @@ services:
     type: model
     database: postgres
     model: categories
+
+  - name: Article
+    type: model
+    database: postgres
+    model: articles
 
 # Change these information to make the deployment work correctly
 deployment:

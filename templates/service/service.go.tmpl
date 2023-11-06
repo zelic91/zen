@@ -94,3 +94,18 @@ func (s *service) {{ .OperationID }}(ctx context.Context{{- if eq .Security "Bea
 		{{- end}}
 	{{- end }}
 {{- end }}
+
+{{- range $service, $targets := .ServiceCrawlerTargetMap}}
+	{{- if eq $service $.CurrentService.Name }}
+		{{- range $index, $target := $targets }}
+func (s *service) {{ $target.OperationID }}(
+	ctx context.Context,
+	{{- range $target.Properties }}
+	{{ .Name }} {{ .Type }},
+	{{- end }}
+) error {
+	return nil
+}
+		{{- end }}
+	{{- end }}
+{{- end }}

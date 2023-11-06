@@ -1,23 +1,25 @@
 package config
 
 type Config struct {
-	Title               string
-	Description         string
-	ModuleName          string `yaml:"moduleName"`
-	Api                 Api
-	Commands            map[string]Command
-	Databases           map[string]Database
-	Services            []Service
-	Env                 map[string]Env
-	CurrentPackage      string
-	CurrentModelName    string
-	CurrentModel        Model
-	CurrentCommand      string
-	CurrentServiceName  string
-	CurrentService      Service
-	ServiceOperationMap map[string][]ApiPath
-	ServiceDatabaseMap  map[string]Database
-	Deployment          Deployment
+	Title                   string
+	Description             string
+	ModuleName              string `yaml:"moduleName"`
+	Api                     Api
+	Commands                map[string]Command
+	Databases               map[string]Database
+	Services                []Service
+	Env                     map[string]Env
+	CurrentPackage          string
+	CurrentModelName        string
+	CurrentModel            Model
+	CurrentCommand          string
+	CurrentServiceName      string
+	CurrentService          Service
+	ServiceOperationMap     map[string][]ApiPath
+	ServiceDatabaseMap      map[string]Database
+	ServiceCrawlerTargetMap map[string][]CrawlerTarget
+	Deployment              Deployment
+	Crawler                 Crawler
 }
 
 func (c Config) ServiceWithName(name string) *Service {
@@ -135,4 +137,24 @@ type Deployment struct {
 	DockerHubUsername string `yaml:"dockerHubUsername"`
 	DockerHubRepo     string `yaml:"dockerHubRepo"`
 	TargetPort        string `yaml:"targetPort"`
+}
+
+type Crawler struct {
+	SleepTime   int             `yaml:"sleepTime"`
+	WorkerCount int             `yaml:"workerCount"`
+	BaseURL     string          `yaml:"baseURL"`
+	Targets     []CrawlerTarget `yaml:"targets"`
+}
+
+type CrawlerTarget struct {
+	Name        string
+	Service     string
+	OperationID string `yaml:"operationId"`
+	Properties  []TargetProperty
+}
+
+type TargetProperty struct {
+	Name  string
+	Type  string
+	XPath string `yaml:"xpath"`
 }
