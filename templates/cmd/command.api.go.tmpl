@@ -13,8 +13,10 @@ import (
 	"{{ .ModuleName }}/config"
 	"{{ .ModuleName }}/db/postgres"
 	// "{{ .ModuleName }}/db/mongo"
-{{- range $index, $service := .Services }}
-	"{{ $.ModuleName }}/{{ $service.Name | snakecase }}"
+{{- range $serviceName, $apiPaths := .ServiceOperationMap }}
+	{{- if not (eq $serviceName "Auth") }}
+	"{{ $.ModuleName }}/{{ $serviceName | snakecase }}"
+	{{- end }}
 {{- end }}
 	"{{ .ModuleName }}/user"
 	"time"
@@ -68,21 +70,21 @@ func RunCommand(cmd *cobra.Command, args []string) {
 	userService := user.NewService(&userRepo)
 	authService := auth.NewService(authenticator, userService)
 
-{{- range $serviceName, $database := .ServiceDatabaseMap }}
-	{{- if eq .Type "postgres" }}
+{{ range $serviceName, $apiPaths := .ServiceOperationMap }}
+	{{- with index $.ServiceDatabaseMap $serviceName }}
+		{{- if eq .Type "postgres" }}
 	{{ $serviceName | untitle }}Repo := {{ $serviceName | untitle }}.NewRepo(postgresDB)
-	{{- else if eq .Type "mongo" }}
-		{{- with index $.Services $serviceName }}
+		{{- else if eq .Type "mongo" }}	
+			{{- with index $.Services $serviceName }}
 	{{ $serviceName | untitle }}Collection := mongoDB.Database(config.MongoDatabase).Collection("{{ .Model }}")
 	{{ $serviceName | untitle }}Repo := {{ $serviceName | untitle }}.NewRepo({{ $serviceName | untitle }}Collection)
+			{{- end }}
 		{{- end }}
 	{{- end }}
-{{- end }}
-
-{{- range $index, $service := .Services }}
-	{{ $service.Name | untitle }}Service := {{ $service.Name | untitle }}.NewService(&{{ $service.Name | untitle }}Repo)
-{{- end }}
-
+	{{- if not (eq $serviceName "Auth") }}
+	{{ $serviceName | untitle }}Service := {{ $serviceName | untitle }}.NewService(&{{ $serviceName | untitle }}Repo)
+	{{- end }}
+{{ end }}
 
 	serverImpl := api.NewServerImpl(
 		{{- range $serviceName, $operation := .ServiceOperationMap }}

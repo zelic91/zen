@@ -15,7 +15,18 @@ paths:
       operationId: {{ .OperationID }}
       security:
         - {{ .Security }}: []
-      
+      {{- if .Params }}
+      parameters:
+        {{- range $index, $params := .Params }} 
+        - name: {{ .Name }}
+          in: {{ .In }}
+          description: 
+          required: {{ .Required }}
+          schema:
+            type: {{ .Type }}
+            format: {{ .Format }}
+        {{- end }}
+      {{- end }}
       {{- if .RequestBody }}
       requestBody:
         description: Request body

@@ -18,6 +18,8 @@ func FuncMap() template.FuncMap {
 		"references":      References,
 		"isLastInMap":     IsLastInMap,
 		"structFieldName": StructFieldName,
+		"pathParams":      PathParams,
+		"queryParams":     QueryParams,
 	}
 }
 
@@ -118,4 +120,26 @@ func StructFieldName(fieldName string) string {
 		return strings.TrimRight(fieldName, "Id") + "ID"
 	}
 	return fieldName
+}
+
+func PathParams(params []config.ApiParam) []config.ApiParam {
+	ret := []config.ApiParam{}
+	for _, param := range params {
+		if param.In == "path" {
+			ret = append(ret, param)
+		}
+	}
+
+	return ret
+}
+
+func QueryParams(params []config.ApiParam) []config.ApiParam {
+	ret := []config.ApiParam{}
+	for _, param := range params {
+		if param.In == "query" {
+			ret = append(ret, param)
+		}
+	}
+
+	return ret
 }

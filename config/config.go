@@ -118,6 +118,15 @@ type ApiPath struct {
 	SuccessResponse int    `yaml:"successResponse"`
 	ResponseBody    string `yaml:"responseBody"`
 	Security        string
+	Params          []ApiParam
+}
+
+type ApiParam struct {
+	Name     string
+	In       string
+	Required bool
+	Type     string
+	Format   string
 }
 
 type Schema struct {

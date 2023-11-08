@@ -13,7 +13,11 @@ import (
 {{- range $service, $apiPaths := .ServiceOperationMap}}
 type {{ $service }}Service interface {
 	{{- range $apiPaths }}
-	{{ .OperationID }}(ctx context.Context{{- if eq .Security "BearerAuth"}}, user *common.AuthUser{{- end }}{{- if .RequestBody }}, body *gen.{{ .RequestBody }}{{- end }}) (*gen.{{ .ResponseBody }}, error) 
+	{{ .OperationID }}(
+		ctx context.Context,
+		{{- if eq .Security "BearerAuth"}}user *common.AuthUser,{{- end }}
+		{{- if .RequestBody }}body *gen.{{ .RequestBody }},{{- end }}
+	) (*gen.{{ .ResponseBody }}, error) 
 	{{- end}}
 }
 {{- end }}
@@ -43,8 +47,16 @@ func NewServerImpl(
 }
 
 {{- range $service, $apiPaths := .ServiceOperationMap }}
-	{{- range $apiPaths }}
-func (s *ServerImpl) {{ .OperationID }}(ctx echo.Context) error {
+	{{ range $apiPaths }}
+func (s *ServerImpl) {{ .OperationID }}(
+	ctx echo.Context,
+	{{ range $index, $param := (.Params | pathParams) }}
+	{{ .Name }} {{ .Format }},
+	{{ end }}
+	{{ if .Params | queryParams }}
+	params gen.{{ .OperationID }}Params,
+	{{ end }}
+) error {
 	{{- if eq .Security "BearerAuth" }}
 	user := GetAuthUserFromContext(ctx)
 	{{- end }}
@@ -55,23 +67,42 @@ func (s *ServerImpl) {{ .OperationID }}(ctx echo.Context) error {
 
 	if err != nil {
 		log.Error(err)
-		return sendError(ctx, http.StatusBadRequest, 10000, "Invalid request body")
+		return sendError(
+			ctx, 
+			http.StatusBadRequest, 
+			10000, 
+			"Invalid request body",
+		)
 	}
 	{{- end }}
 
-	resp, err := s.service.{{ .OperationID }}(ctx.Request().Context(){{- if eq .Security "BearerAuth" }}, user{{- end }}{{- if .RequestBody }}, &body{{- end }})
+	resp, err := s.service.{{ .OperationID }}(
+		ctx.Request().Context(),
+		{{- if eq .Security "BearerAuth" }}user,{{- end }}
+		{{- if .RequestBody }}&body,{{- end }}
+	)
 
 	if err != nil {
 		log.Error(err)
-		return sendError(ctx, http.StatusInternalServerError, 10001, "Failed to {{ .OperationID }}")
+		return sendError(
+			ctx, 
+			http.StatusInternalServerError, 
+			10001, 
+			"Failed to {{ .OperationID }}",
+		)
 	}
 
 	return ctx.JSON({{ .SuccessResponse }}, resp)
 }
-	{{- end }}
+	{{ end }}
 {{- end }}
 
-func sendError(ctx echo.Context, statusCode int, code int, message string) error {
+func sendError(
+	ctx echo.Context, 
+	statusCode int, 
+	code int, 
+	message string,
+) error {
 	resp := gen.Error{
 		Code:    code,
 		Message: message,

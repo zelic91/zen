@@ -3,8 +3,10 @@ package {{ .CurrentPackage }}
 import (
 	"context"
 	
+{{ if (index .ServiceOperationMap .CurrentService.Name) }}
 	"{{ .ModuleName }}/api/gen"
 	"{{ .ModuleName }}/common"
+{{ end }}
 )
 
 type Create{{ .CurrentModelName | singularize | title }}Params struct {
@@ -88,7 +90,11 @@ func (s *service) Update{{ .CurrentModelName | singularize | title }}(ctx contex
 {{- range $service, $apiPaths := .ServiceOperationMap}}
 	{{- if eq $service $.CurrentService.Name }}
 		{{- range $apiPaths }}
-func (s *service) {{ .OperationID }}(ctx context.Context{{- if eq .Security "BearerAuth"}}, user *common.AuthUser{{- end }}{{- if .RequestBody }}, body *gen.{{ .RequestBody }}{{- end }}) (*gen.{{ .ResponseBody }}, error) {
+func (s *service) {{ .OperationID }}(
+	ctx context.Context,
+	{{- if eq .Security "BearerAuth"}}user *common.AuthUser,{{- end }}
+	{{- if .RequestBody }}body *gen.{{ .RequestBody }},{{- end }}
+) (*gen.{{ .ResponseBody }}, error) {
 	return nil, nil
 }
 		{{- end}}

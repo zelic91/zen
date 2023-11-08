@@ -129,24 +129,6 @@ api:
         successResponse: 201
         responseBody: DefaultResponse
 
-    /objects:
-      post:
-        summary: Create a new object
-        security: BearerAuth
-        service: Object
-        operationId: CreateObject
-        requestBody: CreateObject
-        successResponse: 201
-        responseBody: DefaultResponse
-
-      get:
-        summary: Get all objects
-        security: BearerAuth
-        service: Object
-        operationId: GetObjects
-        successResponse: 200
-        responseBody: GetObjectsBody
-
     /categories:
       post:
         summary: Create a new category
@@ -164,31 +146,84 @@ api:
         operationId: GetCategories
         successResponse: 200
         responseBody: GetCategoriesBody
+    
+    /objects:
+      post:
+        summary: Create a new object
+        security: BearerAuth
+        service: Object
+        operationId: CreateObject
+        requestBody: CreateObject
+        successResponse: 201
+        responseBody: DefaultResponse
+        params:
+          - name: search
+            in: query
+            required: false
+            type: string
+            format: string
+          - name: limit
+            in: query
+            required: false
+            type: string
+            format: string
+          - name: offset
+            in: query
+            required: false
+            type: string
+            format: string
+          
 
-    # /objects/{id}:
-    #   get:
-    #     summary: Get a specific object
-    #     security: BearerAuth
-    #     service: Object
-    #     operationId: GetObject
-    #     successResponse: 200
-    #     responseBody: GetObjectBody
+      get:
+        summary: Get all objects
+        security: BearerAuth
+        service: Object
+        operationId: GetObjects
+        successResponse: 200
+        responseBody: GetObjectsBody
+
+    /objects/{id}:
+      get:
+        summary: Get a specific object
+        security: BearerAuth
+        service: Object
+        operationId: GetObject
+        successResponse: 200
+        responseBody: GetObjectBody
+        params:
+          - name: id
+            in: path
+            required: true
+            type: integer
+            format: int64
       
-    #   put:
-    #     summary: Update an object
-    #     security: BearerAuth
-    #     service: Object
-    #     operationId: UpdateObject
-    #     successResponse: 200
-    #     responseBody: DefaultResponse
+      put:
+        summary: Update an object
+        security: BearerAuth
+        service: Object
+        operationId: UpdateObject
+        successResponse: 200
+        responseBody: DefaultResponse
+        params:
+          - name: id
+            in: path
+            required: true
+            type: integer
+            format: int64
 
-    #   delete:
-    #     summary: Delete an object
-    #     security: BearerAuth
-    #     service: Object
-    #     operationId: DeleteObject
-    #     successResponse: 200
-    #     responseBody: DefaultResponse
+      delete:
+        summary: Delete an object
+        security: BearerAuth
+        service: Object
+        operationId: DeleteObject
+        successResponse: 200
+        responseBody: DefaultResponse
+        params:
+          - name: id
+            in: path
+            required: true
+            type: integer
+            format: int64
 
   schemas:
     SignInRequest:

@@ -427,7 +427,8 @@ func generateGeneric(
 
 		formatted, err := format.Source(rendered.Bytes())
 		if err != nil {
-			log.Fatal(err)
+			log.Println(rendered.String())
+			log.Fatalf("err formatting Go source %s %v", tmpl.Name(), err)
 		}
 
 		filePath.Write(formatted)
