@@ -16,6 +16,9 @@ type {{ $service }}Service interface {
 	{{ .OperationID }}(
 		ctx context.Context,
 		{{- if eq .Security "BearerAuth"}}user *common.AuthUser,{{- end }}
+		{{ range $index, $param := .Params }}
+		{{ .Name }} {{ if not .Required }}*{{ end }}{{ .Format }},
+		{{ end }}
 		{{- if .RequestBody }}body *gen.{{ .RequestBody }},{{- end }}
 	) (*gen.{{ .ResponseBody }}, error) 
 	{{- end}}
@@ -61,6 +64,10 @@ func (s *ServerImpl) {{ .OperationID }}(
 	user := GetAuthUserFromContext(ctx)
 	{{- end }}
 
+	{{ range $index, $param := (.Params | queryParams) }}
+	{{ .Name }} := params.{{ .Name | title }}
+	{{ end }}
+
 	{{- if .RequestBody }}
 	var body gen.{{ .RequestBody }}
 	err := ctx.Bind(&body)
@@ -79,6 +86,7 @@ func (s *ServerImpl) {{ .OperationID }}(
 	resp, err := s.service.{{ .OperationID }}(
 		ctx.Request().Context(),
 		{{- if eq .Security "BearerAuth" }}user,{{- end }}
+		{{- range $index, $param := (.Params ) }}{{ .Name }},{{ end }}
 		{{- if .RequestBody }}&body,{{- end }}
 	)
 

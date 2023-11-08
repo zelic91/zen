@@ -92,8 +92,11 @@ func (s *service) Update{{ .CurrentModelName | singularize | title }}(ctx contex
 		{{- range $apiPaths }}
 func (s *service) {{ .OperationID }}(
 	ctx context.Context,
-	{{- if eq .Security "BearerAuth"}}user *common.AuthUser,{{- end }}
-	{{- if .RequestBody }}body *gen.{{ .RequestBody }},{{- end }}
+	{{ if eq .Security "BearerAuth"}}user *common.AuthUser,{{ end }}
+	{{ range $index, $param := .Params }}
+		{{ .Name }} {{ if not .Required }}*{{ end }}{{ .Format }},
+	{{ end }}
+	{{ if .RequestBody }}body *gen.{{ .RequestBody }},{{ end }}
 ) (*gen.{{ .ResponseBody }}, error) {
 	return nil, nil
 }
