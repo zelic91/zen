@@ -22,20 +22,20 @@ type Update{{ .CurrentModelName | singularize | title }}Params struct {
 	{{- end }}
 }
 
-type service struct {
+type Service struct {
 	repo *Repo
 }
 
 func NewService(
 	repo *Repo,
-) *service {
-	return &service{
+) *Service {
+	return &Service{
 		repo: repo,
 	}
 }
 
 /* For reference
-func (s *service) Create{{ .CurrentModelName | singularize | title }}(ctx context.Context, params *gen.Create{{ .CurrentModelName | singularize | title }}) (*gen.Create{{ .CurrentModelName | singularize | title }}Response, error) {
+func (s *Service) Create{{ .CurrentModelName | singularize | title }}(ctx context.Context, params *gen.Create{{ .CurrentModelName | singularize | title }}) (*gen.Create{{ .CurrentModelName | singularize | title }}Response, error) {
 	res, err := s.repo.Create(
 		ctx,
 	{{- range $propertyName, $property := .CurrentModel.Properties }}
@@ -60,7 +60,7 @@ func (s *service) Create{{ .CurrentModelName | singularize | title }}(ctx contex
 	return nil, nil
 }
 
-func (s *service) Update{{ .CurrentModelName | singularize | title }}(ctx context.Context, id int64, params *gen.Update{{ .CurrentModelName | singularize | title }}) (*gen.Update{{ .CurrentModelName | singularize | title }}Response, error) {
+func (s *Service) Update{{ .CurrentModelName | singularize | title }}(ctx context.Context, id int64, params *gen.Update{{ .CurrentModelName | singularize | title }}) (*gen.Update{{ .CurrentModelName | singularize | title }}Response, error) {
 	res, err := s.repo.Update(
 		ctx,
 		id,
@@ -90,7 +90,7 @@ func (s *service) Update{{ .CurrentModelName | singularize | title }}(ctx contex
 {{- range $service, $apiPaths := .ServiceOperationMap}}
 	{{- if eq $service $.CurrentService.Name }}
 		{{- range $apiPaths }}
-func (s *service) {{ .OperationID }}(
+func (s *Service) {{ .OperationID }}(
 	ctx context.Context,
 	{{ if eq .Security "BearerAuth"}}user *common.AuthUser,{{ end }}
 	{{ range $index, $param := .Params }}
@@ -107,7 +107,7 @@ func (s *service) {{ .OperationID }}(
 {{- range $service, $targets := .ServiceCrawlerTargetMap}}
 	{{- if eq $service $.CurrentService.Name }}
 		{{- range $index, $target := $targets }}
-func (s *service) {{ $target.OperationID }}(
+func (s *Service) {{ $target.OperationID }}(
 	ctx context.Context,
 	{{- range $target.Properties }}
 	{{ .Name }} {{ .Type }},

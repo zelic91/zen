@@ -149,10 +149,11 @@ type Deployment struct {
 }
 
 type Crawler struct {
-	SleepTime   int             `yaml:"sleepTime"`
-	WorkerCount int             `yaml:"workerCount"`
-	BaseURL     string          `yaml:"baseURL"`
-	Targets     []CrawlerTarget `yaml:"targets"`
+	PostDelayPerCrawl   int             `yaml:"postDelayPerCrawl"`
+	PostDelayPerRequest int             `yaml:"postDelayPerRequest"`
+	WorkerCount         int             `yaml:"workerCount"`
+	BaseURL             string          `yaml:"baseURL"`
+	Targets             []CrawlerTarget `yaml:"targets"`
 }
 
 type CrawlerTarget struct {

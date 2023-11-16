@@ -298,7 +298,8 @@ api:
           type: string
 
 crawler:
-  sleepTime: 1
+  postDelayPerCrawl: 1
+  postDelayPerRequest: 2
   workerCount: 2
   baseURL: https://example.com
   targets:

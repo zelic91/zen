@@ -164,30 +164,48 @@ api:
         successResponse: 200
         responseBody: GetCategoriesBody
 
-    # /objects/{id}:
-    #   get:
-    #     summary: Get a specific object
-    #     security: BearerAuth
-    #     service: Object
-    #     operationId: GetObject
-    #     successResponse: 200
-    #     responseBody: GetObjectBody
+    /objects/{id}:
+      get:
+        summary: Get a specific object
+        security: BearerAuth
+        service: Object
+        operationId: GetObject
+        successResponse: 200
+        responseBody: GetObjectBody
+        params:
+          - name: id
+            in: path
+            required: true
+            type: integer
+            format: int64
       
-    #   put:
-    #     summary: Update an object
-    #     security: BearerAuth
-    #     service: Object
-    #     operationId: UpdateObject
-    #     successResponse: 200
-    #     responseBody: DefaultResponse
+      put:
+        summary: Update an object
+        security: BearerAuth
+        service: Object
+        operationId: UpdateObject
+        successResponse: 200
+        responseBody: DefaultResponse
+        params:
+          - name: id
+            in: path
+            required: true
+            type: integer
+            format: int64
 
-    #   delete:
-    #     summary: Delete an object
-    #     security: BearerAuth
-    #     service: Object
-    #     operationId: DeleteObject
-    #     successResponse: 200
-    #     responseBody: DefaultResponse
+      delete:
+        summary: Delete an object
+        security: BearerAuth
+        service: Object
+        operationId: DeleteObject
+        successResponse: 200
+        responseBody: DefaultResponse
+        params:
+          - name: id
+            in: path
+            required: true
+            type: integer
+            format: int64
 
   schemas:
     SignInRequest:
@@ -262,7 +280,8 @@ api:
           type: string
 
 crawler:
-  sleepTime: 1
+  postDelayPerCrawl: 1
+  postDelayPerRequest: 2
   workerCount: 2
   baseURL: https://example.com
   targets:
