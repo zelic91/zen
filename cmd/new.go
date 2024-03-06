@@ -7,6 +7,7 @@ import (
 	"log"
 
 	"github.com/spf13/cobra"
+	"github.com/zelic91/zen/common"
 	c "github.com/zelic91/zen/config"
 )
 
@@ -27,17 +28,19 @@ func init() {
 
 func new(name string) {
 	config := c.Config{
-		ModuleName: name,
+		ModuleName:       name,
+		RootFs:           RootFs,
+		RootTemplatePath: "templates",
 	}
 
 	// Make the target path
-	if err := makeTargetPath(name); err != nil {
+	if err := common.MakeTargetPath(name); err != nil {
 		log.Fatal(err)
 	}
 
-	generateSpecific(
+	common.GenerateSpecific(
 		name+"/zen.yaml",
-		rootTemplatePath+"/project/zen.yaml.tmpl",
+		config.RootTemplatePath+"/project/zen.yaml.tmpl",
 		&config,
 	)
 }

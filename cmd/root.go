@@ -5,19 +5,20 @@ package cmd
 
 import (
 	"embed"
+	"log"
 	"os"
-	"text/template"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	c "github.com/zelic91/zen/config"
+	"gopkg.in/yaml.v2"
 )
 
 var (
-	RootFs    embed.FS
-	templates *template.Template
+	RootFs embed.FS
 )
 
-const version = "1.0.11"
+const version = "1.1.0"
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -62,4 +63,20 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("version", "v", false, "Version of the zen tool")
+}
+
+func readConfig(configFile string) *c.Config {
+	yamlFile, err := os.ReadFile(configFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var config c.Config
+	err = yaml.Unmarshal(yamlFile, &config)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return &config
 }

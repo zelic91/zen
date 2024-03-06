@@ -1,14 +1,28 @@
 package config
 
+import "embed"
+
 type Config struct {
-	Title                   string
-	Description             string
-	ModuleName              string `yaml:"moduleName"`
-	Api                     Api
-	Commands                map[string]Command
-	Databases               map[string]Database
-	Services                []Service
-	Env                     map[string]Env
+	// Root template path points to the directory which hosts
+	// every templates.
+	// The templates will be organized into subfolders
+	// by their functionalities. For example:
+	// - root: all necessary files for the project roots: Makefile, sample env, etc.
+	RootTemplatePath string
+	RootFs           embed.FS
+	Title            string
+	Description      string
+	Env              map[string]Env
+	ModuleName       string `yaml:"moduleName"`
+	Api              Api
+	Commands         map[string]Command
+	Databases        map[string]Database
+	Deployment       Deployment
+	Crawler          Crawler
+
+	// TODO: Deprecating below code
+	Services []Service
+
 	CurrentPackage          string
 	CurrentModelName        string
 	CurrentModel            Model
@@ -18,8 +32,6 @@ type Config struct {
 	ServiceOperationMap     map[string][]ApiPath
 	ServiceDatabaseMap      map[string]Database
 	ServiceCrawlerTargetMap map[string][]CrawlerTarget
-	Deployment              Deployment
-	Crawler                 Crawler
 }
 
 func (c Config) ServiceWithName(name string) *Service {

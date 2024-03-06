@@ -25,6 +25,10 @@ export PATH="$GOPATH/bin:$PATH"
 
 ## TODO
 - [ ] Add the ability to check for existing package/file and only generate if missing.
+- [ ] Unit tests
+- [ ] Redis client
+- [ ] Remote logging
+- [ ] Stubbing
 
 ## Notes
 
