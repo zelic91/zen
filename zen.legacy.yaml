@@ -1,0 +1,344 @@
+moduleName: test-zen
+title: Test Gen
+description: Sample configuration for gen
+env:
+  JWT_KEY:
+    structName: JWTKey
+    type: string
+  PORT:
+    type: int
+    defaultValue: 3000
+  POSTGRES_URL:
+    structName: PostgresURL
+    type: string
+    defaultValue: postgres://postgres:postgres@localhost:5432/testgen?sslmode=disable
+  MONGO_URL:
+    structName: MongoURL
+    type: string
+  MONGO_DATABASE:
+    structName: MongoDatabase
+    type: string
+
+commands:
+  server:
+    type: api
+  websocket:
+    type: websocket
+  crawler:
+    type: crawler
+
+databases:
+  postgres:
+    type: postgres
+    models:
+      - name: devices
+        type: data
+        owner: user
+        findBy:
+          - deviceToken
+        properties:
+          platform:
+            type: string
+          device_token:
+            type: string
+          status:
+            type: string
+
+      - name: categories
+        type: data
+        properties:
+          title:
+            type: string
+          description:
+            type: string
+            
+      - name: objects
+        type: data
+        properties:
+          title:
+            type: string
+          content:
+            type: string
+          category_id:
+            type: int64
+            notNull: true
+            references: categories(id)
+
+      - name: articles
+        type: data
+        properties:
+          title:
+            type: string
+          content:
+            type: string
+          url:
+            type: string
+      
+
+  mongo:
+    type: mongo
+    models:
+      - name: users
+        type: user
+        owner: admin
+        searchBy:
+          - username
+          - email
+      - name: devices
+        type: data
+        owner: user
+        properties:
+          platform:
+            type: string
+          device_token:
+            type: string
+          status:
+            type: string
+
+api:
+  title: Main API
+  description: Main API Description
+  paths:
+    /auth/signin:
+      post:
+        summary: Sign in
+        security: ApiKeyAuth
+        service: Auth
+        operationId: SignIn
+        requestBody: SignInRequest
+        successResponse: 200
+        responseBody: AuthResponse
+
+    /auth/signup:
+      post:
+        summary: Sign up
+        security: ApiKeyAuth
+        service: Auth
+        operationId: SignUp
+        requestBody: SignUpRequest
+        successResponse: 201
+        responseBody: AuthResponse
+
+    /devices:
+      post:
+        summary: Register new device token
+        security: BearerAuth
+        service: Device
+        operationId: CreateDevice
+        requestBody: CreateDevice
+        successResponse: 201
+        responseBody: DefaultResponse
+
+    /categories:
+      post:
+        summary: Create a new category
+        security: BearerAuth
+        service: Category
+        operationId: CreateCategory
+        requestBody: CreateCategory
+        successResponse: 201
+        responseBody: DefaultResponse
+
+      get:
+        summary: Get all categories
+        security: BearerAuth
+        service: Category
+        operationId: GetCategories
+        successResponse: 200
+        responseBody: GetCategoriesBody
+    
+    /objects:
+      post:
+        summary: Create a new object
+        security: BearerAuth
+        service: Object
+        operationId: CreateObject
+        requestBody: CreateObject
+        successResponse: 201
+        responseBody: DefaultResponse
+        params:
+          - name: search
+            in: query
+            required: false
+            type: string
+            format: string
+          - name: limit
+            in: query
+            required: false
+            type: string
+            format: string
+          - name: offset
+            in: query
+            required: false
+            type: string
+            format: string
+          
+
+      get:
+        summary: Get all objects
+        security: BearerAuth
+        service: Object
+        operationId: GetObjects
+        successResponse: 200
+        responseBody: GetObjectsBody
+
+    /objects/{id}:
+      get:
+        summary: Get a specific object
+        security: BearerAuth
+        service: Object
+        operationId: GetObject
+        successResponse: 200
+        responseBody: GetObjectBody
+        params:
+          - name: id
+            in: path
+            required: true
+            type: integer
+            format: int64
+      
+      put:
+        summary: Update an object
+        security: BearerAuth
+        service: Object
+        operationId: UpdateObject
+        successResponse: 200
+        responseBody: DefaultResponse
+        params:
+          - name: id
+            in: path
+            required: true
+            type: integer
+            format: int64
+
+      delete:
+        summary: Delete an object
+        security: BearerAuth
+        service: Object
+        operationId: DeleteObject
+        successResponse: 200
+        responseBody: DefaultResponse
+        params:
+          - name: id
+            in: path
+            required: true
+            type: integer
+            format: int64
+
+  schemas:
+    SignInRequest:
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    SignUpRequest:
+      required:
+        - username
+        - password
+        - password_confirmation
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        password_confirmation:
+          type: string
+
+    CreateDevice:
+      required:
+        - deviceToken
+        - platform
+      properties:
+        deviceToken:
+          type: string
+        platform:
+          type: string
+    
+    CreateObject:
+      required:
+        - title
+        - content
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+
+    GetObjectsBody:
+
+    GetObjectBody:
+
+    GetCategoriesBody:
+
+    GetCategoryBody:
+
+    CreateCategory:
+      required:
+        - title
+        - description
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+
+    User:
+      required:
+        - username
+        - email
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+
+crawler:
+  postDelayPerCrawl: 1
+  postDelayPerRequest: 2
+  workerCount: 2
+  baseURL: https://example.com
+  targets:
+    - name: Article
+      service: Article
+      operationId: CreateArticleInternal
+      properties:
+        - name: title
+          type: string
+          xpath: /title
+        - name: content
+          type: string
+          xpath: /content
+
+services:
+  - name: Device
+    type: model
+    database: postgres
+    model: devices
+
+  - name: Object
+    type: model
+    database: postgres
+    model: objects
+  
+  - name: Category
+    type: model
+    database: postgres
+    model: categories
+  
+  - name: Article
+    type: model
+    database: postgres
+    model: articles
+
+deployment:
+  host: sample-subdomain.zeliclabs.com
+  email: thuong@zeliclabs.com
+  secretName: zeliclabs-sample-secret
+  dockerHubUsername: zelic91
+  dockerHubRepo: zen-sample
+  targetPort: 3000

@@ -9,14 +9,16 @@ WHERE id = $1 LIMIT 1;
 SELECT * FROM {{ .Name }}
 ORDER BY created_at;
 
-{{- range .SearchBy }}
+{{- range $propertyName, $property := .Properties }}
+    {{- if .Searchable }}
 
--- name: Find{{ .Name | title }}By{{ . | title }} :many
-SELECT * FROM {{ .Name }}
-WHERE {{ . }} LIKE '%' || $1 || '%'
+-- name: Find{{ $.Name | title }}By{{ $propertyName | title }} :many
+SELECT * FROM {{ $.Name }}
+WHERE {{ $propertyName }} LIKE '%' || $1 || '%'
 ORDER BY created_at
 LIMIT $2
 OFFSET $3;
+    {{- end }}
 {{- end }}
 
 -- name: Create{{ .Name | singularize | title }} :one

@@ -1,13 +1,11 @@
 {{- define "query.sql.tmpl" }}
 -- Query
 {{- range .Databases }}
-    {{- if eq .Type "postgres" }}
-        {{- template "partial.query.user.sql.tmpl"}}
+    {{- template "partial.query.user.sql.tmpl"}}
 
-        {{- range $index, $model := .Models }}
-            {{- template "partial.query.model.sql.tmpl" $model }}
-        {{- end }}
-
+    {{- range $index, $model := .Models }}
+        {{- template "partial.query.model.sql.tmpl" $model }}
     {{- end }}
+
 {{- end }}
 {{- end }}

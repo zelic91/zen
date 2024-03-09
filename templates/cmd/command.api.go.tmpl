@@ -13,10 +13,8 @@ import (
 	"{{ .ModuleName }}/config"
 	"{{ .ModuleName }}/db/postgres"
 	// "{{ .ModuleName }}/db/mongo"
-{{- range $serviceName, $apiPaths := .ServiceOperationMap }}
-	{{- if not (eq $serviceName "Auth") }}
-	"{{ $.ModuleName }}/{{ $serviceName | snakecase }}"
-	{{- end }}
+{{- range $index, $model := .Models }}
+	"{{ $.ModuleName }}/{{ $model.Name | snakecase }}"
 {{- end }}
 	"{{ .ModuleName }}/user"
 	"time"
@@ -27,15 +25,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var {{ .CurrentCommand }}Cmd = &cobra.Command{
-	Use:   "{{ .CurrentCommand }}",
+var {{ .Command }}Cmd = &cobra.Command{
+	Use:   "{{ .Command }}",
 	Short: "Start API server",
 	Long:  `Start API server`,
 	Run:   RunCommand,
 }
 
 func init() {
-	rootCmd.AddCommand({{ .CurrentCommand }}Cmd)
+	rootCmd.AddCommand({{ .Command }}Cmd)
 }
 
 func RunCommand(cmd *cobra.Command, args []string) {
@@ -70,25 +68,28 @@ func RunCommand(cmd *cobra.Command, args []string) {
 	userService := user.NewService(&userRepo)
 	authService := auth.NewService(authenticator, userService)
 
-{{ range $serviceName, $apiPaths := .ServiceOperationMap }}
-	{{- with index $.ServiceDatabaseMap $serviceName }}
-		{{- if eq .Type "postgres" }}
-	{{ $serviceName | untitle }}Repo := {{ $serviceName | untitle }}.NewRepo(postgresDB)
-		{{- else if eq .Type "mongo" }}	
-			{{- with index $.Services $serviceName }}
-	{{ $serviceName | untitle }}Collection := mongoDB.Database(config.MongoDatabase).Collection("{{ .Model }}")
-	{{ $serviceName | untitle }}Repo := {{ $serviceName | untitle }}.NewRepo({{ $serviceName | untitle }}Collection)
-			{{- end }}
+{{ range $index, $db := .Databases }}
+	{{- if eq $db.Type "postgres" }}
+		{{ range $index, $model := $db.Models }}
+	{{ $model.Name | untitle }}Repo := {{ $model.Name | untitle }}.NewRepo(postgresDB)
 		{{- end }}
-	{{- end }}
-	{{- if not (eq $serviceName "Auth") }}
-	{{ $serviceName | untitle }}Service := {{ $serviceName | untitle }}.NewService(&{{ $serviceName | untitle }}Repo)
+	{{- else if eq .Type "mongo" }}	
+		{{ range $index, $model := $db.Models }}
+	{{ $model.Name | untitle }}Collection := mongoDB.Database(config.MongoDatabase).Collection("{{ $model.Name }}")
+	{{ $model.Name | untitle }}Repo := {{ $model.Name | untitle }}.NewRepo({{ $model.Name | untitle }}Collection)
+		{{- end }}
 	{{- end }}
 {{ end }}
 
+{{ range $index, $db := .Databases }}
+		{{ range $index, $model := $db.Models }}
+	{{ $model.Name | untitle }}Service := {{ $model.Name | untitle }}.NewService(&{{ $model.Name | untitle }}Repo)
+		{{- end }}
+{{ end }}
+
 	serverImpl := api.NewServerImpl(
-		{{- range $serviceName, $operation := .ServiceOperationMap }}
-		{{ $serviceName | untitle }}Service,
+		{{- range $index, $resource := .Api.Resources }}
+		{{ $resource.Model.Name | untitle }}Service,
 		{{- end }}
 	)
 

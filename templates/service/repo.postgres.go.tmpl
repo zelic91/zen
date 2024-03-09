@@ -1,4 +1,4 @@
-package {{ .CurrentPackage }}
+package {{ .Model.Name | untitle | singularize }}
 
 import (
 	"context"
@@ -22,78 +22,52 @@ func NewRepo(db *sqlx.DB) Repo {
 
 func (r Repo) FindAll(
 	ctx context.Context,
-) ([]*dbgen.{{ .CurrentModelName | singularize | title }}, error) {
-	return r.query.FindAll{{ .CurrentModelName | title }}(ctx)
+) ([]*dbgen.{{ .Model.Name | singularize | title }}, error) {
+	return r.query.FindAll{{ .Model.Name | title }}(ctx)
 }
 
 func (r Repo) FindByID(
 	ctx context.Context,
 	id int64,
-) (*dbgen.{{ .CurrentModelName | singularize | title }}, error) {
-	return r.query.Find{{ .CurrentModelName | singularize | title }}ById(ctx, id)
+) (*dbgen.{{ .Model.Name | singularize | title }}, error) {
+	return r.query.Find{{ .Model.Name | singularize | title }}ById(ctx, id)
 }
 
 func (r Repo) Create(
 	ctx context.Context,
-{{- if eq .CurrentModel.Type "user" }}
-	{{- range $propertyName, $property := userProperties }}
-	{{ $propertyName | camelcase | untitle }} {{- if .NotNull }} {{ .Type }}{{- else }} *{{ .Type }}{{- end }},
-	{{- end }}
-{{- end }}
-{{- range $propertyName, $property := .CurrentModel.Properties }}
+{{- range $propertyName, $property := .Model.Properties }}
 	{{ $propertyName | camelcase | untitle }} {{- if .NotNull }} {{ .Type }}{{- else }} *{{ .Type }}{{- end }},
 {{- end }}
-) (*dbgen.{{ .CurrentModelName | singularize | title }}, error) {
-	params := dbgen.Create{{ .CurrentModelName | singularize | title }}Params{
-	{{- range $propertyName, $property := .CurrentModel.Properties }}
+) (*dbgen.{{ .Model.Name | singularize | title }}, error) {
+	params := dbgen.Create{{ .Model.Name | singularize | title }}Params{
+	{{- range $propertyName, $property := .Model.Properties }}
 		{{ $propertyName | camelcase | title | structFieldName }}: {{- if $property.NotNull }}{{ $propertyName | camelcase | untitle }}{{- else }}postgres.ToNull{{ .Type | title }}({{ $propertyName | camelcase | untitle }}){{- end }},
 	{{- end }}
 	}
 
-	return r.query.Create{{ .CurrentModelName | singularize | title }}(ctx, params)
+	return r.query.Create{{ .Model.Name | singularize | title }}(ctx, params)
 }
 
 func (r Repo) Update(
 	ctx context.Context,
 	id int64,
-{{- if eq .CurrentModel.Type "user" }}
-	{{- range $propertyName, $property := userProperties }}
-	{{ $propertyName | camelcase | untitle }} {{- if .NotNull }} {{ .Type }}{{- else }} *{{ .Type }}{{- end }},
-	{{- end }}
-{{- end }}
-{{- range $propertyName, $property := .CurrentModel.Properties }}
+{{- range $propertyName, $property := .Model.Properties }}
 	{{ $propertyName | camelcase | untitle }} {{- if .NotNull }} {{ .Type }}{{- else }} *{{ .Type }}{{- end }},
 {{- end }}
-) (*dbgen.{{ .CurrentModelName | singularize | title }}, error) {
-	params := dbgen.Update{{ .CurrentModelName | singularize | title }}Params{
+) (*dbgen.{{ .Model.Name | singularize | title }}, error) {
+	params := dbgen.Update{{ .Model.Name | singularize | title }}Params{
 	ID: id,
-	{{- range $propertyName, $property := .CurrentModel.Properties }}
+	{{- range $propertyName, $property := .Model.Properties }}
 		{{ $propertyName | camelcase | title | structFieldName }}: {{- if $property.NotNull}}{{ $propertyName | camelcase | untitle }}{{- else }}postgres.ToNullString({{ $propertyName | camelcase | untitle }}){{- end }},
 	{{- end }}
 	}
 
-	return r.query.Update{{ .CurrentModelName | singularize | title }}(ctx, params)
+	return r.query.Update{{ .Model.Name | singularize | title }}(ctx, params)
 }
 
 func (r Repo) Delete(
 	ctx context.Context,
 	id int64,
 ) error {
-	return r.query.Delete{{ .CurrentModelName | singularize | title }}(ctx, id)
+	return r.query.Delete{{ .Model.Name | singularize | title }}(ctx, id)
 }
-
-{{- if eq .CurrentModel.Type "user" }}
-func (r Repo) FindByUsername(
-	ctx context.Context,
-	username string,
-) (*dbgen.{{ .CurrentModelName | singularize | title }}, error) {
-	return r.query.Find{{ .CurrentModelName | singularize | title }}ByUsername(ctx, postgres.ToNullString(&username))
-}
-
-func (r Repo) FindByEmail(
-	ctx context.Context,
-	email string,
-) (*dbgen.{{ .CurrentModelName | singularize | title }}, error) {
-	return r.query.Find{{ .CurrentModelName | singularize | title }}ByEmail(ctx, postgres.ToNullString(&email))
-}
-{{- end }}

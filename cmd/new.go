@@ -42,5 +42,6 @@ func new(name string) {
 		name+"/zen.yaml",
 		config.RootTemplatePath+"/project/zen.yaml.tmpl",
 		&config,
+		config,
 	)
 }

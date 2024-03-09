@@ -23,6 +23,7 @@ func GenerateGeneric(
 	outputPath string,
 	inputPath string,
 	config *c.Config,
+	data interface{},
 ) {
 	templateMap := map[string]string{}
 	fileList := []string{}
@@ -86,7 +87,7 @@ func GenerateGeneric(
 		tmpl = tmpl.Funcs(sprig.FuncMap())
 
 		var rendered bytes.Buffer
-		if err := templates.ExecuteTemplate(&rendered, tmpl.Name(), config); err != nil {
+		if err := templates.ExecuteTemplate(&rendered, tmpl.Name(), data); err != nil {
 			log.Fatal(err)
 		}
 
@@ -112,6 +113,7 @@ func GenerateSpecific(
 	outputPath string,
 	inputPath string,
 	config *c.Config,
+	data interface{},
 ) {
 	templates := template.Must(template.New("zen-template").Funcs(sprig.FuncMap()).Funcs(funcs.FuncMap()).ParseFS(
 		config.RootFs,
@@ -145,7 +147,7 @@ func GenerateSpecific(
 	tmpl = tmpl.Funcs(sprig.FuncMap())
 
 	var rendered bytes.Buffer
-	if err := templates.ExecuteTemplate(&rendered, tmpl.Name(), config); err != nil {
+	if err := templates.ExecuteTemplate(&rendered, tmpl.Name(), data); err != nil {
 		log.Fatalf("err executing template %v", err)
 	}
 

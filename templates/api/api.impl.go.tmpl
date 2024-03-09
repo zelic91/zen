@@ -11,29 +11,54 @@ import (
 	"github.com/labstack/gommon/log"
 )
 
-{{- range $service, $apiPaths := .ServiceOperationMap}}
-type {{ $service }}Service interface {
-	{{- range $apiPaths }}
-	{{ .OperationID }}(
+{{- range $index, $resource := .Api.Resources}}
+type {{ $resource.ModelRef | title | singularize }}Service interface {
+	Get{{ $resource.ModelRef | title | singularize }}(
 		ctx context.Context,
-		{{- if eq .Security "BearerAuth"}}
+		{{- if eq $resource.Security "BearerAuth"}}
 		user *common.AuthUser,
 		{{- end }}
-		{{- range $index, $param := .Params }}
-		{{ .Name }} {{ if not .Required }}*{{ end }}{{ .Format }},
-		{{- end }}
-		{{- if .RequestBody }}
-		body *gen.{{ .RequestBody }},
-		{{- end }}
-	) (*gen.{{ .ResponseBody }}, error) 
-	{{ end -}}
-}
+		id interface{},
+	) (*gen.{{ $resource.ModelRef | title | singularize }}, error) 
 
+	List{{ $resource.ModelRef | title }}(
+		ctx context.Context,
+		{{- if eq $resource.Security "BearerAuth"}}
+		user *common.AuthUser,
+		{{- end }}
+		id interface{},
+	) (*gen.{{ $resource.ModelRef | title }}, error) 
+
+	Create{{ $resource.ModelRef | title | singularize }}(
+		ctx context.Context,
+		{{- if eq $resource.Security "BearerAuth"}}
+		user *common.AuthUser,
+		{{- end }}
+		body *gen.{{ $resource.ModelRef | title | singularize }},
+	) (*gen.{{ $resource.ModelRef | title | singularize}}, error) 
+
+	Update{{ $resource.ModelRef | title | singularize }}(
+		ctx context.Context,
+		{{- if eq $resource.Security "BearerAuth"}}
+		user *common.AuthUser,
+		{{- end }}
+		id interface{},
+		body *gen.{{ $resource.ModelRef | title | singularize }},
+	) (*gen.{{ $resource.ModelRef | title | singularize }}, error) 
+
+	Delete{{ $resource.ModelRef | title | singularize }}(
+		ctx context.Context,
+		{{- if eq $resource.Security "BearerAuth"}}
+		user *common.AuthUser,
+		{{- end }}
+		id interface{},
+	) (*gen.{{ $resource.ModelRef | title | singularize }}, error) 
+}
 {{ end }}
 
 type ApiService struct {
-{{- range $service, $apiPaths := .ServiceOperationMap }}
-	{{ $service }}Service
+{{- range $index, $resource := .Api.Resources}}
+	{{ $resource.ModelRef | title | singularize }}Service
 {{- end }}
 }
 
@@ -42,40 +67,30 @@ type ServerImpl struct {
 }
 
 func NewServerImpl(
-{{- range $service, $apiPaths := .ServiceOperationMap}}
-	{{ $service | lower }}Service {{ $service }}Service,
+{{- range $index, $resource := .Api.Resources}}
+	{{ $resource.ModelRef | untitle | singularize }}Service {{ $resource.ModelRef | title | singularize }}Service,
 {{- end }}
 ) ServerImpl {
 	return ServerImpl{
 		service: ApiService{
-{{- range $service, $apiPaths := .ServiceOperationMap}}
-			{{ $service }}Service: {{ $service | lower }}Service,
+{{- range $index, $resource := .Api.Resources}}
+			{{ $resource.ModelRef | title | singularize }}Service: {{ $resource.ModelRef | untitle | singularize }}Service,
 {{- end }}
 		},
 	}
 }
 
-{{- range $service, $apiPaths := .ServiceOperationMap }}
-	{{ range $apiPaths }}
-func (s *ServerImpl) {{ .OperationID }}(
+{{ range $index, $resource := .Api.Resources }}
+
+// {{ $resource.ModelRef | title }}
+func (s *ServerImpl) Create{{ $resource.ModelRef | title | singularize }}(
 	ctx echo.Context,
-	{{- range $index, $param := (.Params | pathParams) }}
-	{{ .Name }} {{ .Format }},
-	{{- end }}
-	{{- if .Params | queryParams }}
-	params gen.{{ .OperationID }}Params,
-	{{- end }}
 ) error {
 	{{- if eq .Security "BearerAuth" }}
 	user := GetAuthUserFromContext(ctx)
 	{{- end }}
 
-	{{ range $index, $param := (.Params | queryParams) }}
-	{{ .Name }} := params.{{ .Name | title }}
-	{{- end }}
-
-	{{ if .RequestBody }}
-	var body gen.{{ .RequestBody }}
+	var body gen.{{ $resource.ModelRef | title | singularize }}
 	err := ctx.Bind(&body)
 
 	if err != nil {
@@ -87,19 +102,13 @@ func (s *ServerImpl) {{ .OperationID }}(
 			"Invalid request body",
 		)
 	}
-	{{- end }}
 
-	resp, err := s.service.{{ .OperationID }}(
+	resp, err := s.service.Create{{ $resource.ModelRef | title | singularize }}(
 		ctx.Request().Context(),
 		{{- if eq .Security "BearerAuth" }}
 		user,
 		{{- end }}
-		{{- range $index, $param := (.Params ) }}
-		{{ .Name }},
-		{{- end }}
-		{{- if .RequestBody }}
 		&body,
-		{{- end }}
 	)
 
 	if err != nil {
@@ -108,14 +117,42 @@ func (s *ServerImpl) {{ .OperationID }}(
 			ctx, 
 			http.StatusInternalServerError, 
 			10001, 
-			"Failed to {{ .OperationID }}",
+			"Failed to get{{ $resource.ModelRef | title | singularize }}",
 		)
 	}
 
-	return ctx.JSON({{ .SuccessResponse }}, resp)
+	return ctx.JSON(201, resp)
 }
-	{{ end }}
-{{- end }}
+
+func (s *ServerImpl) Get{{ $resource.ModelRef | title | singularize }}(
+	ctx echo.Context,
+	id interface{},
+) error {
+	{{- if eq .Security "BearerAuth" }}
+	user := GetAuthUserFromContext(ctx)
+	{{- end }}
+
+	resp, err := s.service.Get{{ $resource.ModelRef | title | singularize }}(
+		ctx.Request().Context(),
+		{{- if eq .Security "BearerAuth" }}
+		user,
+		{{- end }}
+		id,
+	)
+
+	if err != nil {
+		log.Error(err)
+		return sendError(
+			ctx, 
+			http.StatusInternalServerError, 
+			10001, 
+			"Failed to get{{ $resource.ModelRef | title | singularize }}",
+		)
+	}
+
+	return ctx.JSON(200, resp)
+}
+{{- end}}
 
 func sendError(
 	ctx echo.Context, 

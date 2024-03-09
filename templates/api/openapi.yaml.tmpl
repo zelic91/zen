@@ -1,55 +1,40 @@
 
 openapi: 3.1.0
-{{- with .Api}}
 info:
   version: 1.0.0
-  title: {{ .Title }}
-  description: {{ .Description }}
+  title: {{ $.Api.Title }}
+  description: {{ $.Api.Description }}
 paths:
-  {{- range $path, $methods := .Paths }}
-  {{ $path }}:
-    {{- range $method, $value := $methods }}
-    {{ $method }}:
-      {{- with $value }}
-      summary: {{ .Summary }}
-      operationId: {{ .OperationID }}
+  {{- range $index, $resource := $.Api.Resources }}
+  /{{ $resource.ModelRef }}:
+    get:
+      summary: get a {{ $resource.ModelRef | singularize }}
+      operationId: Get{{ $resource.ModelRef | title | singularize }}
       security:
-        - {{ .Security }}: []
-      {{- if .Params }}
-      parameters:
-        {{- range $index, $params := .Params }} 
-        - name: {{ .Name }}
-          in: {{ .In }}
-          description: 
-          required: {{ .Required }}
-          schema:
-            type: {{ .Type }}
-            format: {{ .Format }}
-        {{- end }}
-      {{- end }}
-      {{- if .RequestBody }}
-      requestBody:
-        description: Request body
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/{{ .RequestBody }}"
-      {{- end }}
+        - {{ $resource.Security }}: []
       responses:
-        "{{ .SuccessResponse }}":
-          description: Success response
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/{{ .ResponseBody }}"
+        "200":
+          $ref: "#/components/responses/{{ $resource.ModelRef | title | singularize }}"
         "400":
           $ref: "#/components/responses/BadRequestError"
         "401":
           $ref: "#/components/responses/UnauthorizedError"
       
-      {{- end }}
-    {{- end }}
+    post:
+      summary: create new {{ $resource.ModelRef | singularize }}
+      operationId: Post{{ $resource.ModelRef | title | singularize }}
+      security:
+        - {{ $resource.Security }}: []
+      requestBody:
+        $ref: "#/components/requestBodies/{{ $resource.ModelRef | title | singularize }}"
+      responses:
+        "201":
+          $ref: "#/components/responses/{{ $resource.ModelRef | title | singularize }}"
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+      
   {{- end }}
 
 components:
@@ -62,7 +47,26 @@ components:
       in: header
       name: X-API-KEY
 
+  requestBodies:
+    {{- range $index, $resource := $.Api.Resources }}
+    {{ $resource.ModelRef | title | singularize }}:
+      description: Success response
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/{{ $resource.ModelRef | title | singularize }}"
+    {{- end }}
+
   responses:
+    {{- range $index, $resource := $.Api.Resources }}
+    {{ $resource.ModelRef | title | singularize }}:
+      description: Success response
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/{{ $resource.ModelRef | title | singularize }}"
+    {{- end }}
+
     Default:
       description: Success response
       content:
@@ -115,18 +119,38 @@ components:
           type: string
           default: Success
 
-    {{- range $key, $value := .Schemas }}
-    {{ $key }}:
+    {{- range $index, $resource := $.Api.Resources }}
+    {{ $resource.ModelRef | title | singularize }}:
       type: object
       required:
-        {{- range .Required }}
-        - {{ . }}
+        {{- range $name, $property := $resource.Model.Properties }}
+          {{- if $property.NotNull }}
+        - {{ $name }}
+          {{- end }}
         {{- end }}
       properties:
-        {{- range $name, $property := .Properties }}
+        {{- range $name, $property := $resource.Model.Properties }}
         {{ $name }}:
           type: {{ .Type }}
         {{- end }}
-    {{- end }}
 
-{{- end }}
+    {{ $resource.ModelRef | title }}:
+      type: object
+      required:
+        {{- range $name, $property := $resource.Model.Properties }}
+          {{- if $property.NotNull }}
+        - {{ $name }}
+          {{- end }}
+        {{- end }}
+      properties:
+        limit:
+          type: integer
+          format: int64
+        offset:
+          type: integer
+          format: int64
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/{{ $resource.ModelRef | title | singularize }}'
+    {{- end }}

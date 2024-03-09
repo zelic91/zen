@@ -78,5 +78,32 @@ func readConfig(configFile string) *c.Config {
 		log.Fatal(err)
 	}
 
+	// Preprocess the databases and models
+	config.DatabaseMap = map[string]c.Database{}
+	for _, db := range config.Databases {
+		config.DatabaseMap[db.Name] = db
+	}
+
+	config.ModelMap = map[string]c.Model{}
+	for _, m := range config.Models {
+		config.ModelMap[m.Name] = m
+	}
+
+	// Prepare the databases
+	for index, db := range config.Databases {
+		db.Models = []c.Model{}
+		for _, modelRef := range db.ModelRefs {
+			db.Models = append(db.Models, config.ModelMap[modelRef])
+		}
+		config.Databases[index] = db
+	}
+
+	// Prepare the api
+	for index, resource := range config.Api.Resources {
+		resource.Database = config.DatabaseMap[resource.DatabaseRef]
+		resource.Model = config.ModelMap[resource.ModelRef]
+		config.Api.Resources[index] = resource
+	}
+
 	return &config
 }

@@ -4,7 +4,6 @@ CREATE TABLE admins (
     first_name TEXT,
     last_name TEXT,
     username TEXT NOT NULL,
-    email TEXT,
     password_hashed TEXT,
     password_salt TEXT,
     status TEXT,
@@ -17,14 +16,12 @@ CREATE TABLE admins (
 );
 
 CREATE UNIQUE INDEX idx_admins_unique_username ON admins (username);
-CREATE UNIQUE INDEX idx_admins_unique_email ON admins (email);
 
 CREATE TABLE users (
     id BIGSERIAL PRIMARY KEY,
     first_name TEXT,
     last_name TEXT,
     username TEXT NOT NULL,
-    email TEXT,
     password_hashed TEXT,
     password_salt TEXT,
     status TEXT,
@@ -37,11 +34,9 @@ CREATE TABLE users (
 );
 
 CREATE UNIQUE INDEX idx_users_unique_username ON users (username);
-CREATE UNIQUE INDEX idx_users_unique_email ON users (email);
 
 {{- range $key, $value := .Databases }}
-    {{- if eq .Type "postgres" }}
-        {{- range $index, $model := .Models }}
+    {{- range $index, $model := .Models }}
 CREATE TABLE {{ $model.Name }} (
     id BIGSERIAL PRIMARY KEY,
     
@@ -61,7 +56,7 @@ CREATE TABLE {{ $model.Name }} (
         {{- range $propertyName, $property := $references }}
     CONSTRAINT fk_{{ $propertyName }}
         FOREIGN KEY({{ $propertyName }})
-            REFERENCES {{ .References }}
+            REFERENCES {{ .Ref }}
             ON DELETE CASCADE{{- if not (isLastInMap $propertyName $references) }},{{- end }}
         {{- end }}{{- if .Owner}},{{- end }}
     {{- end }}
@@ -81,17 +76,14 @@ CREATE TABLE {{ $model.Name }} (
             ON DELETE CASCADE
     {{- end }}
 );
-        {{- end }}
     {{- end }}
 {{- end }}
 
 
 -- migrate:down
 {{- range .Databases }}
-    {{- if eq .Type "postgres" }}
-        {{- range $index, $model := .Models }}
+    {{- range $index, $model := .Models }}
 DROP TABLE {{ $model.Name }};
-        {{- end }}
     {{- end }}
 {{- end }}
 
