@@ -6,12 +6,14 @@ import (
 )
 
 type commandData struct {
-	ModuleName string
-	Command    string
-	Models     []c.Model
-	Databases  []c.Database
-	Api        c.Api
-	Crawler    c.Crawler
+	ModuleName  string
+	Command     string
+	Models      []c.Model
+	Databases   []c.Database
+	Api         c.Api
+	Crawler     c.Crawler
+	HasPostgres bool
+	HasMongo    bool
 }
 
 func generateCommands(
@@ -19,11 +21,13 @@ func generateCommands(
 	config *c.Config,
 ) {
 	data := commandData{
-		ModuleName: config.ModuleName,
-		Models:     config.Models,
-		Databases:  config.Databases,
-		Api:        config.Api,
-		Crawler:    config.Crawler,
+		ModuleName:  config.ModuleName,
+		Models:      config.Models,
+		Databases:   config.Databases,
+		Api:         config.Api,
+		Crawler:     config.Crawler,
+		HasPostgres: config.HasPostgres,
+		HasMongo:    config.HasMongo,
 	}
 
 	common.GenerateSpecific(

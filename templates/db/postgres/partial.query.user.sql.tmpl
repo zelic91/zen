@@ -9,10 +9,6 @@ WHERE id = $1 LIMIT 1;
 SELECT * FROM users
 WHERE username LIKE '%' || $1 || '%' LIMIT 1;
 
--- name: FindUserByEmail :one
-SELECT * FROM users
-WHERE email LIKE '%' || $1 || '%' LIMIT 1;
-
 -- name: FindAllUsers :many
 SELECT * FROM users
 ORDER BY created_at;
@@ -24,19 +20,11 @@ ORDER BY created_at
 LIMIT $2
 OFFSET $3;
 
--- name: FindUsersByEmail :many
-SELECT * FROM users
-WHERE email LIKE '%' || $1 || '%'
-ORDER BY created_at
-LIMIT $2
-OFFSET $3;
-
 -- name: CreateUser :one
 INSERT INTO users (
     first_name,
     last_name,
     username,
-    email,
     password_hashed,
     password_salt,
     status,
@@ -56,7 +44,6 @@ INSERT INTO users (
     $7,
     $8,
     $9,
-    $10,
     NOW(),
     NOW(),
     NOW()
@@ -69,11 +56,10 @@ SET
     first_name = $2,
     last_name = $3,
     username = $4,
-    email = $5,
-    password_hashed = $6,
-    password_salt = $7,
-    status = $8,
-    updated_by = $9,
+    password_hashed = $5,
+    password_salt = $6,
+    status = $7,
+    updated_by = $8,
     updated_at = NOW()
 WHERE id = $1
 RETURNING *;

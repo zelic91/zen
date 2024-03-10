@@ -2,6 +2,7 @@ package {{ .Model.Name | untitle | singularize }}
 
 import (
 	"context"
+	"strconv"
 	"{{ .ModuleName }}/db/postgres"
 	"{{ .ModuleName }}/db/postgres/dbgen"
 	
@@ -28,9 +29,14 @@ func (r Repo) FindAll(
 
 func (r Repo) FindByID(
 	ctx context.Context,
-	id int64,
+	id string,
 ) (*dbgen.{{ .Model.Name | singularize | title }}, error) {
-	return r.query.Find{{ .Model.Name | singularize | title }}ById(ctx, id)
+	idInt64, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.query.Find{{ .Model.Name | singularize | title }}ById(ctx, idInt64)
 }
 
 func (r Repo) Create(
@@ -50,13 +56,17 @@ func (r Repo) Create(
 
 func (r Repo) Update(
 	ctx context.Context,
-	id int64,
+	id string,
 {{- range $propertyName, $property := .Model.Properties }}
 	{{ $propertyName | camelcase | untitle }} {{- if .NotNull }} {{ .Type }}{{- else }} *{{ .Type }}{{- end }},
 {{- end }}
 ) (*dbgen.{{ .Model.Name | singularize | title }}, error) {
+	idInt64, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		return nil, err
+	}
 	params := dbgen.Update{{ .Model.Name | singularize | title }}Params{
-	ID: id,
+		ID: idInt64,
 	{{- range $propertyName, $property := .Model.Properties }}
 		{{ $propertyName | camelcase | title | structFieldName }}: {{- if $property.NotNull}}{{ $propertyName | camelcase | untitle }}{{- else }}postgres.ToNullString({{ $propertyName | camelcase | untitle }}){{- end }},
 	{{- end }}
@@ -67,7 +77,11 @@ func (r Repo) Update(
 
 func (r Repo) Delete(
 	ctx context.Context,
-	id int64,
+	id string,
 ) error {
-	return r.query.Delete{{ .Model.Name | singularize | title }}(ctx, id)
+	idInt64, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		return err
+	}
+	return r.query.Delete{{ .Model.Name | singularize | title }}(ctx, idInt64)
 }

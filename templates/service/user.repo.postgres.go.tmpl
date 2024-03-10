@@ -35,21 +35,13 @@ func (r Repo) FindByID(
 
 func (r Repo) Create(
 	ctx context.Context,
-	email *string,
-	firstName *string,
-	lastName *string,
 	passwordHashed *string,
 	passwordSalt *string,
-	status *string,
 	username string,
 ) (*dbgen.User, error) {
 	params := dbgen.CreateUserParams{
-		Email:          postgres.ToNullString(email),
-		FirstName:      postgres.ToNullString(firstName),
-		LastName:       postgres.ToNullString(lastName),
 		PasswordHashed: postgres.ToNullString(passwordHashed),
 		PasswordSalt:   postgres.ToNullString(passwordSalt),
-		Status:         postgres.ToNullString(status),
 		Username:       username,
 	}
 
@@ -59,22 +51,14 @@ func (r Repo) Create(
 func (r Repo) Update(
 	ctx context.Context,
 	id int64,
-	email *string,
-	firstName *string,
-	lastName *string,
 	passwordHashed *string,
 	passwordSalt *string,
-	status *string,
 	username string,
 ) (*dbgen.User, error) {
 	params := dbgen.UpdateUserParams{
 		ID:             id,
-		Email:          postgres.ToNullString(email),
-		FirstName:      postgres.ToNullString(firstName),
-		LastName:       postgres.ToNullString(lastName),
 		PasswordHashed: postgres.ToNullString(passwordHashed),
 		PasswordSalt:   postgres.ToNullString(passwordSalt),
-		Status:         postgres.ToNullString(status),
 		Username:       username,
 	}
 
@@ -93,11 +77,4 @@ func (r Repo) FindByUsername(
 	username string,
 ) (*dbgen.User, error) {
 	return r.query.FindUserByUsername(ctx, postgres.ToNullString(&username))
-}
-
-func (r Repo) FindByEmail(
-	ctx context.Context,
-	email string,
-) (*dbgen.User, error) {
-	return r.query.FindUserByEmail(ctx, postgres.ToNullString(&email))
 }

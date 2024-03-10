@@ -7,23 +7,14 @@ import (
 )
 
 type CreateUserParams struct {
-	Email          *string
-	FirstName      *string
-	LastName       *string
 	PasswordHashed *string
 	PasswordSalt   *string
-	Status         *string
 	Username       string
 }
 
 type UpdateUserParams struct {
-	ID             int64
-	Email          *string
-	FirstName      *string
-	LastName       *string
 	PasswordHashed *string
 	PasswordSalt   *string
-	Status         *string
 	Username       string
 }
 
@@ -42,12 +33,8 @@ func NewService(
 func (s *service) CreateUser(ctx context.Context, params CreateUserParams) (*dbgen.User, error) {
 	res, err := s.repo.Create(
 		ctx,
-		params.Email,
-		params.FirstName,
-		params.LastName,
 		params.PasswordHashed,
 		params.PasswordSalt,
-		params.Status,
 		params.Username,
 	)
 
@@ -73,12 +60,8 @@ func (s *service) UpdateUser(ctx context.Context, params UpdateUserParams) (*dbg
 	res, err := s.repo.Update(
 		ctx,
 		params.ID,
-		params.Email,
-		params.FirstName,
-		params.LastName,
 		params.PasswordHashed,
 		params.PasswordSalt,
-		params.Status,
 		params.Username,
 	)
 

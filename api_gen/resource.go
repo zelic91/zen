@@ -5,6 +5,7 @@ import (
 
 	"github.com/zelic91/zen/common"
 	c "github.com/zelic91/zen/config"
+	"github.com/zelic91/zen/funcs"
 )
 
 type resourceData struct {
@@ -24,7 +25,7 @@ func generateResources(
 		databaseRef := resource.DatabaseRef
 		database := config.DatabaseMap[databaseRef]
 
-		packageName := strings.ToLower(resource.ModelRef)
+		packageName := funcs.Singularize(strings.ToLower(resource.ModelRef))
 
 		data := resourceData{
 			ModuleName: config.ModuleName,

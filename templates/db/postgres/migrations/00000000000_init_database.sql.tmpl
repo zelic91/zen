@@ -41,7 +41,7 @@ CREATE TABLE {{ $model.Name }} (
     id BIGSERIAL PRIMARY KEY,
     
     {{- range $propertyName, $property := .Properties }}
-    {{ $propertyName }} {{ sqlType .Type }}{{ if .NotNull }} NOT NULL {{ end }},
+    {{ $propertyName }} {{ if .Ref }}BIGSERIAL{{ else }}{{ sqlType .Type }}{{ end }}{{ if .NotNull }} NOT NULL {{ end }},
     {{- end }}
 
     created_by BIGSERIAL,

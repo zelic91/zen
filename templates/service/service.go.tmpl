@@ -2,23 +2,11 @@ package {{ .Model.Name | untitle | singularize }}
 
 import (
 	"context"
+	"log"
 	
 	"{{ .ModuleName }}/api/gen"
 	"{{ .ModuleName }}/common"
 )
-
-type Create{{ .Model.Name | singularize | title }}Params struct {
-	{{- range $propertyName, $property := .Model.Properties }}
-	{{ $propertyName | camelcase | title | structFieldName }}{{- if .NotNull }} {{ .Type }}{{- else }}*{{ .Type }}{{- end }}
-	{{- end }}
-}
-
-type Update{{ .Model.Name | singularize | title }}Params struct {
-	ID int64
-	{{- range $propertyName, $property := .Model.Properties }}
-	{{ $propertyName | camelcase | title | structFieldName }}{{- if .NotNull }} {{ .Type }}{{- else }}*{{ .Type }}{{- end }}
-	{{- end }}
-}
 
 type Service struct {
 	repo *Repo
@@ -32,11 +20,71 @@ func NewService(
 	}
 }
 
-func (s *Service) Create{{ .Model.Name | singularize | title }}(ctx context.Context, params *gen.Create{{ .Model.Name | singularize | title }}) (*gen.Create{{ .Model.Name | singularize | title }}Response, error) {
+func (s *Service) Get{{ .Resource.ModelRef | title | singularize }}(
+	ctx context.Context,
+	{{- if eq .Resource.Security "BearerAuth"}}
+	user *common.AuthUser,
+	{{- end }}
+	id string,
+) (*gen.{{ .Resource.ModelRef | title | singularize }}, error) {
+	res, err := s.repo.FindByID(
+		ctx,
+		id,
+	)
+
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	return &gen.{{ .Model.Name | singularize | title }}{
+	{{- range $propertyName, $property := .Model.Properties }}
+		{{ $propertyName | camelcase }}: &res.{{ $propertyName | camelcase }}.String,
+	{{- end }}
+	}, nil
+}
+
+func (s *Service) List{{ .Resource.ModelRef | title }}(
+	ctx context.Context,
+	{{- if eq .Resource.Security "BearerAuth"}}
+	user *common.AuthUser,
+	{{- end }}
+	params *gen.List{{ .Resource.ModelRef | title }}Params,
+) (*gen.{{ .Resource.ModelRef | title }}, error) {
+	res, err := s.repo.FindAll(
+		ctx,
+	)
+
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	{{ .Resource.ModelRef }} := []gen.{{ .Resource.ModelRef | title | singularize }}{}
+	for _, {{ .Resource.ModelRef | singularize }} := range res {
+		{{ .Resource.ModelRef }} = append({{ .Resource.ModelRef }}, gen.{{ .Resource.ModelRef | title | singularize }}{
+			{{- range $propertyName, $property := .Model.Properties }}
+			{{ $propertyName | camelcase }}: &{{ $.Resource.ModelRef | singularize }}.{{ $propertyName | camelcase }}.String,
+			{{- end }}
+		})
+	}
+
+	return &gen.{{ .Resource.ModelRef | title }}{
+		Data: &{{ .Resource.ModelRef }},
+	}, nil
+}
+
+func (s *Service) Create{{ .Resource.ModelRef | title | singularize }}(
+	ctx context.Context,
+	{{- if eq .Resource.Security "BearerAuth"}}
+	user *common.AuthUser,
+	{{- end }}
+	body *gen.{{ .Resource.ModelRef | title | singularize }},
+) (*gen.{{ .Resource.ModelRef | title | singularize }}, error) {
 	res, err := s.repo.Create(
 		ctx,
 	{{- range $propertyName, $property := .Model.Properties }}
-		params.{{ $propertyName | camelcase }},
+		body.{{ $propertyName | camelcase }},
 	{{- end }}
 	)
 
@@ -45,19 +93,26 @@ func (s *Service) Create{{ .Model.Name | singularize | title }}(ctx context.Cont
 		return nil, err
 	}
 
-	return &gen.Create{{ .Model.Name | singularize | title }}ResponseBody{
-		// TODO: Implement this
+	return &gen.{{ .Model.Name | singularize | title }}{
+	{{- range $propertyName, $property := .Model.Properties }}
+		{{ $propertyName | camelcase }}: &res.{{ $propertyName | camelcase }}.String,
+	{{- end }}
 	}, nil
-
-	return nil, nil
 }
 
-func (s *Service) Update{{ .Model.Name | singularize | title }}(ctx context.Context, id int64, params *gen.Update{{ .Model.Name | singularize | title }}) (*gen.Update{{ .Model.Name | singularize | title }}Response, error) {
+func (s *Service) Update{{ .Resource.ModelRef | title | singularize }}(
+	ctx context.Context,
+	{{- if eq .Resource.Security "BearerAuth"}}
+	user *common.AuthUser,
+	{{- end }}
+	id string,
+	body *gen.{{ .Resource.ModelRef | title | singularize }},
+) (*gen.{{ .Resource.ModelRef | title | singularize }}, error)  {
 	res, err := s.repo.Update(
 		ctx,
 		id,
 	{{- range $propertyName, $property := .Model.Properties }}
-		params.{{ $propertyName | camelcase }},
+		body.{{ $propertyName | camelcase }},
 	{{- end }}
 	)
 
@@ -66,9 +121,24 @@ func (s *Service) Update{{ .Model.Name | singularize | title }}(ctx context.Cont
 		return nil, err
 	}
 
-	return &gen.Update{{ .Model.Name | singularize | title }}ResponseBody{
-		// TODO: Implement this
+	return &gen.{{ .Model.Name | singularize | title }}{
+	{{- range $propertyName, $property := .Model.Properties }}
+		{{ $propertyName | camelcase }}: &res.{{ $propertyName | camelcase }}.String,
+	{{- end }}
 	}, nil
+}
 
-	return nil, nil
+func (s *Service) Delete{{ .Resource.ModelRef | title | singularize }}(
+	ctx context.Context,
+	{{- if eq .Resource.Security "BearerAuth"}}
+	user *common.AuthUser,
+	{{- end }}
+	id string,
+) error {
+	err := s.repo.Delete(
+		ctx,
+		id,
+	)
+
+	return err
 }

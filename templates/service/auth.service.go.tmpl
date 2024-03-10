@@ -46,7 +46,7 @@ func NewService(
 	}
 }
 
-func (s service) SignUp(ctx context.Context, body *gen.SignUpRequest) (*gen.AuthResponse, error) {
+func (s service) SignUp(ctx context.Context, body *gen.SignUp) (*gen.AuthResponse, error) {
 	if body.Password != body.PasswordConfirmation {
 		return nil, ErrPasswordNotMatch
 	}
@@ -78,7 +78,7 @@ func (s service) SignUp(ctx context.Context, body *gen.SignUpRequest) (*gen.Auth
 	}, nil
 }
 
-func (s service) SignIn(ctx context.Context, body *gen.SignInRequest) (*gen.AuthResponse, error) {
+func (s service) SignIn(ctx context.Context, body *gen.SignIn) (*gen.AuthResponse, error) {
 	user, err := s.userService.FindByUsername(ctx, body.Username)
 	if err != nil {
 		return nil, err

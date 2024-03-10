@@ -103,6 +103,12 @@ func readConfig(configFile string) *c.Config {
 		resource.Database = config.DatabaseMap[resource.DatabaseRef]
 		resource.Model = config.ModelMap[resource.ModelRef]
 		config.Api.Resources[index] = resource
+
+		if resource.Database.Type == "postgres" {
+			config.HasPostgres = true
+		} else if resource.Database.Type == "mongo" {
+			config.HasMongo = true
+		}
 	}
 
 	return &config

@@ -11,6 +11,18 @@ import (
 	"github.com/labstack/gommon/log"
 )
 
+type AuthService interface {
+	SignUp(
+		ctx context.Context, 
+		body *gen.SignUp,
+	) (*gen.AuthResponse, error)
+
+	SignIn(
+		ctx context.Context, 
+		body *gen.SignIn,
+	) (*gen.AuthResponse, error)
+}
+
 {{- range $index, $resource := .Api.Resources}}
 type {{ $resource.ModelRef | title | singularize }}Service interface {
 	Get{{ $resource.ModelRef | title | singularize }}(
@@ -18,7 +30,7 @@ type {{ $resource.ModelRef | title | singularize }}Service interface {
 		{{- if eq $resource.Security "BearerAuth"}}
 		user *common.AuthUser,
 		{{- end }}
-		id interface{},
+		id string,
 	) (*gen.{{ $resource.ModelRef | title | singularize }}, error) 
 
 	List{{ $resource.ModelRef | title }}(
@@ -26,7 +38,7 @@ type {{ $resource.ModelRef | title | singularize }}Service interface {
 		{{- if eq $resource.Security "BearerAuth"}}
 		user *common.AuthUser,
 		{{- end }}
-		id interface{},
+		params *gen.List{{ $resource.ModelRef | title }}Params,
 	) (*gen.{{ $resource.ModelRef | title }}, error) 
 
 	Create{{ $resource.ModelRef | title | singularize }}(
@@ -42,7 +54,7 @@ type {{ $resource.ModelRef | title | singularize }}Service interface {
 		{{- if eq $resource.Security "BearerAuth"}}
 		user *common.AuthUser,
 		{{- end }}
-		id interface{},
+		id string,
 		body *gen.{{ $resource.ModelRef | title | singularize }},
 	) (*gen.{{ $resource.ModelRef | title | singularize }}, error) 
 
@@ -51,12 +63,13 @@ type {{ $resource.ModelRef | title | singularize }}Service interface {
 		{{- if eq $resource.Security "BearerAuth"}}
 		user *common.AuthUser,
 		{{- end }}
-		id interface{},
-	) (*gen.{{ $resource.ModelRef | title | singularize }}, error) 
+		id string,
+	) error
 }
 {{ end }}
 
 type ApiService struct {
+	AuthService
 {{- range $index, $resource := .Api.Resources}}
 	{{ $resource.ModelRef | title | singularize }}Service
 {{- end }}
@@ -67,12 +80,14 @@ type ServerImpl struct {
 }
 
 func NewServerImpl(
+	authService AuthService,
 {{- range $index, $resource := .Api.Resources}}
 	{{ $resource.ModelRef | untitle | singularize }}Service {{ $resource.ModelRef | title | singularize }}Service,
 {{- end }}
 ) ServerImpl {
 	return ServerImpl{
 		service: ApiService{
+			AuthService: authService,
 {{- range $index, $resource := .Api.Resources}}
 			{{ $resource.ModelRef | title | singularize }}Service: {{ $resource.ModelRef | untitle | singularize }}Service,
 {{- end }}
@@ -80,9 +95,136 @@ func NewServerImpl(
 	}
 }
 
+// Auth
+func (s *ServerImpl) SignIn(
+	ctx echo.Context,
+) error {
+	var body gen.SignIn
+	err := ctx.Bind(&body)
+
+	if err != nil {
+		log.Error(err)
+		return sendError(
+			ctx,
+			http.StatusBadRequest,
+			10000,
+			"Invalid request body",
+		)
+	}
+
+	resp, err := s.service.SignIn(
+		ctx.Request().Context(),
+		&body,
+	)
+
+	if err != nil {
+		log.Error(err)
+		return sendError(
+			ctx,
+			http.StatusInternalServerError,
+			10001,
+			"Failed to signIn",
+		)
+	}
+
+	return ctx.JSON(200, resp)
+}
+
+func (s *ServerImpl) SignUp(
+	ctx echo.Context,
+) error {
+	var body gen.SignUp
+	err := ctx.Bind(&body)
+
+	if err != nil {
+		log.Error(err)
+		return sendError(
+			ctx,
+			http.StatusBadRequest,
+			10000,
+			"Invalid request body",
+		)
+	}
+
+	resp, err := s.service.SignUp(
+		ctx.Request().Context(),
+		&body,
+	)
+
+	if err != nil {
+		log.Error(err)
+		return sendError(
+			ctx,
+			http.StatusInternalServerError,
+			10001,
+			"Failed to signUp",
+		)
+	}
+
+	return ctx.JSON(200, resp)
+}
+
 {{ range $index, $resource := .Api.Resources }}
 
 // {{ $resource.ModelRef | title }}
+func (s *ServerImpl) List{{ $resource.ModelRef | title }}(
+	ctx echo.Context,
+	params gen.List{{ $resource.ModelRef | title }}Params,
+) error {
+	{{- if eq .Security "BearerAuth" }}
+	user := GetAuthUserFromContext(ctx)
+	{{- end }}
+
+	resp, err := s.service.List{{ $resource.ModelRef | title }}(
+		ctx.Request().Context(),
+		{{- if eq .Security "BearerAuth" }}
+		user,
+		{{- end }}
+		&params,
+	)
+
+	if err != nil {
+		log.Error(err)
+		return sendError(
+			ctx, 
+			http.StatusInternalServerError, 
+			10001, 
+			"Failed to list{{ $resource.ModelRef | title }}",
+		)
+	}
+
+	return ctx.JSON(200, resp)
+}
+
+func (s *ServerImpl) Get{{ $resource.ModelRef | title | singularize }}(
+	ctx echo.Context,
+	id string,
+) error {
+	{{- if eq .Security "BearerAuth" }}
+	user := GetAuthUserFromContext(ctx)
+	{{- end }}
+
+	resp, err := s.service.Get{{ $resource.ModelRef | title | singularize }}(
+		ctx.Request().Context(),
+		{{- if eq .Security "BearerAuth" }}
+		user,
+		{{- end }}
+		id,
+	)
+
+	if err != nil {
+		log.Error(err)
+		return sendError(
+			ctx, 
+			http.StatusInternalServerError, 
+			10001, 
+			"Failed to get{{ $resource.ModelRef | title | singularize }}",
+		)
+	}
+
+	return ctx.JSON(200, resp)
+}
+
 func (s *ServerImpl) Create{{ $resource.ModelRef | title | singularize }}(
 	ctx echo.Context,
 ) error {
@@ -124,15 +266,58 @@ func (s *ServerImpl) Create{{ $resource.ModelRef | title | singularize }}(
 	return ctx.JSON(201, resp)
 }
 
-func (s *ServerImpl) Get{{ $resource.ModelRef | title | singularize }}(
+func (s *ServerImpl) Update{{ $resource.ModelRef | title | singularize }}(
 	ctx echo.Context,
-	id interface{},
+	id string,
 ) error {
 	{{- if eq .Security "BearerAuth" }}
 	user := GetAuthUserFromContext(ctx)
 	{{- end }}
 
-	resp, err := s.service.Get{{ $resource.ModelRef | title | singularize }}(
+	var body gen.{{ $resource.ModelRef | title | singularize }}
+	err := ctx.Bind(&body)
+
+	if err != nil {
+		log.Error(err)
+		return sendError(
+			ctx, 
+			http.StatusBadRequest, 
+			10000, 
+			"Invalid request body",
+		)
+	}
+
+	resp, err := s.service.Update{{ $resource.ModelRef | title | singularize }}(
+		ctx.Request().Context(),
+		{{- if eq .Security "BearerAuth" }}
+		user,
+		{{- end }}
+		id,
+		&body,
+	)
+
+	if err != nil {
+		log.Error(err)
+		return sendError(
+			ctx, 
+			http.StatusInternalServerError, 
+			10001, 
+			"Failed to update{{ $resource.ModelRef | title | singularize }}",
+		)
+	}
+
+	return ctx.JSON(200, resp)
+}
+
+func (s *ServerImpl) Delete{{ $resource.ModelRef | title | singularize }}(
+	ctx echo.Context,
+	id string,
+) error {
+	{{- if eq .Security "BearerAuth" }}
+	user := GetAuthUserFromContext(ctx)
+	{{- end }}
+
+	err := s.service.Delete{{ $resource.ModelRef | title | singularize }}(
 		ctx.Request().Context(),
 		{{- if eq .Security "BearerAuth" }}
 		user,
@@ -146,11 +331,11 @@ func (s *ServerImpl) Get{{ $resource.ModelRef | title | singularize }}(
 			ctx, 
 			http.StatusInternalServerError, 
 			10001, 
-			"Failed to get{{ $resource.ModelRef | title | singularize }}",
+			"Failed to delete{{ $resource.ModelRef | title | singularize }}",
 		)
 	}
 
-	return ctx.JSON(200, resp)
+	return ctx.JSON(200, err)
 }
 {{- end}}
 

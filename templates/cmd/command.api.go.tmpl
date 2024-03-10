@@ -11,10 +11,14 @@ import (
 	"{{ .ModuleName }}/api/gen"
 	"{{ .ModuleName }}/auth"
 	"{{ .ModuleName }}/config"
+{{- if .HasPostgres }}
 	"{{ .ModuleName }}/db/postgres"
-	// "{{ .ModuleName }}/db/mongo"
-{{- range $index, $model := .Models }}
-	"{{ $.ModuleName }}/{{ $model.Name | snakecase }}"
+{{- end }}
+{{- if .HasMongo }}
+	"{{ .ModuleName }}/db/mongo"
+{{- end }}
+{{- range $index, $resource := $.Api.Resources }}
+	"{{ $.ModuleName }}/{{ $resource.ModelRef | singularize | snakecase }}"
 {{- end }}
 	"{{ .ModuleName }}/user"
 	"time"
@@ -68,28 +72,23 @@ func RunCommand(cmd *cobra.Command, args []string) {
 	userService := user.NewService(&userRepo)
 	authService := auth.NewService(authenticator, userService)
 
-{{ range $index, $db := .Databases }}
-	{{- if eq $db.Type "postgres" }}
-		{{ range $index, $model := $db.Models }}
-	{{ $model.Name | untitle }}Repo := {{ $model.Name | untitle }}.NewRepo(postgresDB)
-		{{- end }}
-	{{- else if eq .Type "mongo" }}	
-		{{ range $index, $model := $db.Models }}
-	{{ $model.Name | untitle }}Collection := mongoDB.Database(config.MongoDatabase).Collection("{{ $model.Name }}")
-	{{ $model.Name | untitle }}Repo := {{ $model.Name | untitle }}.NewRepo({{ $model.Name | untitle }}Collection)
-		{{- end }}
+{{ range $index, $resource := .Api.Resources }}
+	{{- if eq $resource.Database.Type "postgres" }}
+	{{ $resource.ModelRef | untitle | singularize }}Repo := {{ $resource.ModelRef | untitle | singularize }}.NewRepo(postgresDB)
+	{{- else if $resource.Database.Type "mongo" }}	
+	{{ $resource.ModelRef | untitle | singularize }}Collection := mongoDB.Database(config.MongoDatabase).Collection("{{ $resource.ModelRef }}")
+	{{ $resource.ModelRef | untitle | singularize }}Repo := {{ $resource.ModelRef | untitle | singularize }}.NewRepo({{ $resource.ModelRef | untitle | singularize }}Collection)
 	{{- end }}
 {{ end }}
 
-{{ range $index, $db := .Databases }}
-		{{ range $index, $model := $db.Models }}
-	{{ $model.Name | untitle }}Service := {{ $model.Name | untitle }}.NewService(&{{ $model.Name | untitle }}Repo)
-		{{- end }}
+{{ range $index, $resource := .Api.Resources }}
+	{{ $resource.ModelRef | untitle | singularize }}Service := {{ $resource.ModelRef | untitle | singularize }}.NewService(&{{ $resource.ModelRef | untitle | singularize }}Repo)
 {{ end }}
 
 	serverImpl := api.NewServerImpl(
+		authService,
 		{{- range $index, $resource := .Api.Resources }}
-		{{ $resource.Model.Name | untitle }}Service,
+		{{ $resource.ModelRef | untitle | singularize }}Service,
 		{{- end }}
 	)
 

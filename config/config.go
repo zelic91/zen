@@ -26,4 +26,6 @@ type Config struct {
 	// Access Utils
 	ModelMap    map[string]Model
 	DatabaseMap map[string]Database
+	HasPostgres bool
+	HasMongo    bool
 }

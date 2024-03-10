@@ -10,6 +10,7 @@ type rootData struct {
 	Commands   map[string]c.Command
 	Databases  []c.Database
 	Env        map[string]c.Env
+	Api        c.Api
 }
 
 // Generate the root files such as Makefile or sample env
@@ -23,6 +24,7 @@ func generateRootFiles(
 		Commands:   config.Commands,
 		Databases:  []c.Database{},
 		Env:        config.Env,
+		Api:        config.Api,
 	}
 
 	for _, db := range config.Databases {
