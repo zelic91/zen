@@ -9,6 +9,7 @@ import (
 
 func FuncMap() template.FuncMap {
 	return map[string]interface{}{
+		"id":              ID,
 		"pluralize":       Pluralize,
 		"singularize":     Singularize,
 		"userProperties":  UserProperties,
@@ -19,6 +20,13 @@ func FuncMap() template.FuncMap {
 		"isLastInMap":     IsLastInMap,
 		"structFieldName": StructFieldName,
 	}
+}
+
+func ID(input string) string {
+	if strings.HasSuffix(input, "id") || strings.HasSuffix(input, "Id") {
+		return input[0:len(input)-2] + "ID"
+	}
+	return input
 }
 
 func Pluralize(input string) string {

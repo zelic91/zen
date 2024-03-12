@@ -42,12 +42,12 @@ func (r Repo) FindByID(
 func (r Repo) Create(
 	ctx context.Context,
 {{- range $propertyName, $property := .Model.Properties }}
-	{{ $propertyName | camelcase | untitle }} {{- if .NotNull }} {{ .Type }}{{- else }} *{{ .Type }}{{- end }},
+	{{ $propertyName | camelcase | untitle }} {{ if .Ref }}int64{{ else }}{{- if .NotNull }} {{ .Type }}{{- else }} *{{ .Type }}{{- end }}{{- end }},
 {{- end }}
 ) (*dbgen.{{ .Model.Name | singularize | title }}, error) {
 	params := dbgen.Create{{ .Model.Name | singularize | title }}Params{
 	{{- range $propertyName, $property := .Model.Properties }}
-		{{ $propertyName | camelcase | title | structFieldName }}: {{- if $property.NotNull }}{{ $propertyName | camelcase | untitle }}{{- else }}postgres.ToNull{{ .Type | title }}({{ $propertyName | camelcase | untitle }}){{- end }},
+		{{ $propertyName | camelcase | title | structFieldName }}: {{ if .Ref }}{{ $propertyName | camelcase | untitle }}{{ else }}{{- if $property.NotNull }}{{ $propertyName | camelcase | untitle }}{{- else }}postgres.ToNull{{ .Type | title }}({{ $propertyName | camelcase | untitle }}){{- end }}{{- end }},
 	{{- end }}
 	}
 
@@ -58,7 +58,7 @@ func (r Repo) Update(
 	ctx context.Context,
 	id string,
 {{- range $propertyName, $property := .Model.Properties }}
-	{{ $propertyName | camelcase | untitle }} {{- if .NotNull }} {{ .Type }}{{- else }} *{{ .Type }}{{- end }},
+	{{ $propertyName | camelcase | untitle }} {{ if .Ref }}int64{{ else }}{{- if .NotNull }} {{ .Type }}{{- else }} *{{ .Type }}{{- end }}{{- end }},
 {{- end }}
 ) (*dbgen.{{ .Model.Name | singularize | title }}, error) {
 	idInt64, err := strconv.ParseInt(id, 10, 64)
@@ -68,7 +68,7 @@ func (r Repo) Update(
 	params := dbgen.Update{{ .Model.Name | singularize | title }}Params{
 		ID: idInt64,
 	{{- range $propertyName, $property := .Model.Properties }}
-		{{ $propertyName | camelcase | title | structFieldName }}: {{- if $property.NotNull}}{{ $propertyName | camelcase | untitle }}{{- else }}postgres.ToNullString({{ $propertyName | camelcase | untitle }}){{- end }},
+		{{ $propertyName | camelcase | title | structFieldName }}: {{ if .Ref }}{{ $propertyName | camelcase | untitle }}{{ else }}{{- if $property.NotNull }}{{ $propertyName | camelcase | untitle }}{{- else }}postgres.ToNull{{ .Type | title }}({{ $propertyName | camelcase | untitle }}){{- end }}{{- end }},
 	{{- end }}
 	}
 

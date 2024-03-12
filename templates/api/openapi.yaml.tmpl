@@ -285,14 +285,23 @@ components:
       type: object
       required:
         {{- range $name, $property := $resource.Model.Properties }}
-          {{- if $property.NotNull }}
+          {{- if or $property.NotNull $property.Ref }}
         - {{ $name }}
           {{- end }}
         {{- end }}
       properties:
         {{- range $name, $property := $resource.Model.Properties }}
         {{ $name }}:
+          {{ if .Ref }}
+            {{ if eq $resource.Database.Type "postgres" }}
+          type: integer
+          format: int64
+            {{ else }}
+          type: string
+            {{- end }}    
+          {{ else }}
           type: {{ .Type }}
+          {{- end }}  
         {{- end }}
 
     {{ $resource.ModelRef | title }}:

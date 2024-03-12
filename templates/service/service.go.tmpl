@@ -39,7 +39,11 @@ func (s *Service) Get{{ .Resource.ModelRef | title | singularize }}(
 
 	return &gen.{{ .Model.Name | singularize | title }}{
 	{{- range $propertyName, $property := .Model.Properties }}
+		{{- if eq .Type "string" }}
 		{{ $propertyName | camelcase }}: &res.{{ $propertyName | camelcase }}.String,
+		{{- else }}
+		{{ $propertyName | camelcase }}: res.{{ $propertyName | camelcase | id }},
+		{{- end }}
 	{{- end }}
 	}, nil
 }
@@ -64,7 +68,11 @@ func (s *Service) List{{ .Resource.ModelRef | title }}(
 	for _, {{ .Resource.ModelRef | singularize }} := range res {
 		{{ .Resource.ModelRef }} = append({{ .Resource.ModelRef }}, gen.{{ .Resource.ModelRef | title | singularize }}{
 			{{- range $propertyName, $property := .Model.Properties }}
+			{{- if eq .Type "string" }}
 			{{ $propertyName | camelcase }}: &{{ $.Resource.ModelRef | singularize }}.{{ $propertyName | camelcase }}.String,
+			{{- else }}
+			{{ $propertyName | camelcase }}: {{ $.Resource.ModelRef | singularize }}.{{ $propertyName | camelcase | id }},
+			{{- end }}
 			{{- end }}
 		})
 	}
@@ -95,7 +103,11 @@ func (s *Service) Create{{ .Resource.ModelRef | title | singularize }}(
 
 	return &gen.{{ .Model.Name | singularize | title }}{
 	{{- range $propertyName, $property := .Model.Properties }}
+		{{- if eq .Type "string" }}
 		{{ $propertyName | camelcase }}: &res.{{ $propertyName | camelcase }}.String,
+		{{- else }}
+		{{ $propertyName | camelcase }}: res.{{ $propertyName | camelcase | id }},
+		{{- end }}
 	{{- end }}
 	}, nil
 }
@@ -123,7 +135,11 @@ func (s *Service) Update{{ .Resource.ModelRef | title | singularize }}(
 
 	return &gen.{{ .Model.Name | singularize | title }}{
 	{{- range $propertyName, $property := .Model.Properties }}
+		{{- if eq .Type "string" }}
 		{{ $propertyName | camelcase }}: &res.{{ $propertyName | camelcase }}.String,
+		{{- else }}
+		{{ $propertyName | camelcase }}: res.{{ $propertyName | camelcase | id }},
+		{{- end }}
 	{{- end }}
 	}, nil
 }

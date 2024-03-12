@@ -96,3 +96,15 @@ api:
     - modelRef: devices
       databaseRef: main
       security: BearerAuth
+
+    - modelRef: articles
+      databaseRef: main
+      security: BearerAuth
+
+    - modelRef: categories
+      databaseRef: main
+      security: BearerAuth
+
+    - modelRef: objects
+      databaseRef: main
+      security: BearerAuth

@@ -61,7 +61,7 @@ models:
       content:
         type: string
       category_id:
-        ref: categories
+        ref: categories(id)
 
   - name: articles
     properties:
