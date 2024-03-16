@@ -23,6 +23,7 @@ import (
 	"{{ .ModuleName }}/user"
 	"time"
 
+	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
@@ -47,7 +48,6 @@ func RunCommand(cmd *cobra.Command, args []string) {
 	// mongoDB := mongo.Init(config)
 
 	e := echo.New()
-	g := e.Group("/api/v1")
 
 	jwtKey := config.JWTKey
 	if len(jwtKey) == 0 {
@@ -56,16 +56,18 @@ func RunCommand(cmd *cobra.Command, args []string) {
 
 	authenticator := api.NewAppAuthenticator(jwtKey)
 
-	authMiddleware, err := api.CreateAuthMiddleware(authenticator)
-
+	spec, err := gen.GetSwagger()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	e.Use(middleware.CORS())
-	g.Use(middleware.CORS())
-	g.Use(authMiddleware...)
-	g.Use(middleware.Logger())
+	spec.Servers = []*openapi3.Server{ { URL: "/api/v1", Description: "Needed to match path" } }
+
+	authMiddleware, err := api.CreateAuthMiddleware(spec, authenticator)
+
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	userRepo := user.NewRepo(postgresDB)
 
@@ -92,7 +94,17 @@ func RunCommand(cmd *cobra.Command, args []string) {
 		{{- end }}
 	)
 
-	gen.RegisterHandlersWithBaseURL(e, &serverImpl, "api/v1")
+	var middlewares = []echo.MiddlewareFunc{
+		middleware.CORS(),
+		middleware.Logger(),
+	}
+
+	middlewares = append(middlewares, authMiddleware...)
+
+	g := e.Group("/api/v1")
+	e.Use(middlewares...)
+
+	gen.RegisterHandlers(g, &serverImpl)
 
 	go func() {
 		if err := e.Start(fmt.Sprintf("0.0.0.0:%d", config.Port)); err != nil && err != http.ErrServerClosed {

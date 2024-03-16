@@ -18,7 +18,7 @@ var (
 	RootFs embed.FS
 )
 
-const version = "1.1.2"
+const version = "1.1.3"
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{

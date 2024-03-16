@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"{{ .ModuleName }}/api/gen"
 	"{{ .ModuleName }}/common"
 	"net/http"
 	"strings"
 
 	"github.com/deepmap/oapi-codegen/pkg/middleware"
+	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/labstack/echo/v4"
 	"github.com/lestrrat-go/jwx/jwt"
@@ -156,12 +156,7 @@ func CreateUserMiddleware(v JWSValidator) echo.MiddlewareFunc {
 	}
 }
 
-func CreateAuthMiddleware(v JWSValidator) ([]echo.MiddlewareFunc, error) {
-	spec, err := gen.GetSwagger()
-	if err != nil {
-		return nil, fmt.Errorf("loading spec: %w", err)
-	}
-
+func CreateAuthMiddleware(spec *openapi3.T, v JWSValidator) ([]echo.MiddlewareFunc, error) {
 	validatorMiddleware := middleware.OapiRequestValidatorWithOptions(spec,
 		&middleware.Options{
 			Options: openapi3filter.Options{
