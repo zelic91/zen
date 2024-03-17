@@ -30,13 +30,11 @@ INSERT INTO {{ .Name }} (
     updated_by,
     deleted_by,
     created_at,
-    updated_at,
-    deleted_at
+    updated_at
 ) VALUES (
     {{- range loop 1 (len .Properties | add 3) }}
     ${{ . }},
     {{- end }}
-    NOW(),
     NOW(),
     NOW()
 )
@@ -59,5 +57,9 @@ RETURNING *;
 -- name: Delete{{ .Name | singularize | title }} :exec
 DELETE FROM {{ .Name }}
 WHERE id = $1;
+
+-- name: CountActive{{ .Name | title }} :exec
+SELECT COUNT(id) FROM {{ .Name }}
+WHERE deleted_at IS NULL;
 
 {{- end }}
